@@ -21,6 +21,9 @@
       <a class="nav-item active" data-page="dashboard" href="#">
         <i class="fas fa-home"></i><span>Dashboard</span>
       </a>
+      <a class="nav-item" data-page="setup" href="#">
+        <i class="fas fa-plug"></i><span>🔌 Setup</span>
+      </a>
       <a class="nav-item" data-page="magic" href="#">
         <i class="fas fa-magic"></i><span>✨ Magic</span>
       </a>
@@ -1302,8 +1305,202 @@
         </div>
       </div>
     </div>
+
+    <!-- ── Setup Wizard Page ─────────────────────────────────────────────── -->
+    <div id="setup" class="page">
+
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:16px;padding:28px;margin-bottom:24px;color:white">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">🔌 Connect Your Accounts</h2>
+        <p style="opacity:.85;font-size:14px">One-click OAuth — no manual token copying. Just enter your App credentials, click Connect, approve in your browser, done.</p>
+      </div>
+
+      <!-- Platform status row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+        <div id="ig-status-card" style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <i class="fab fa-instagram" style="font-size:24px;color:#e1306c"></i>
+            <span style="font-weight:600;font-size:16px">Instagram</span>
+            <span id="ig-connection-pill" class="status-pill pill-sim">SIM</span>
+          </div>
+          <div id="ig-connection-detail" style="font-size:13px;color:var(--gray)">Not connected — configure below</div>
+        </div>
+        <div id="yt-status-card" style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <i class="fab fa-youtube" style="font-size:24px;color:#ff0000"></i>
+            <span style="font-weight:600;font-size:16px">YouTube</span>
+            <span id="yt-connection-pill" class="status-pill pill-sim">SIM</span>
+          </div>
+          <div id="yt-connection-detail" style="font-size:13px;color:var(--gray)">Not connected — configure below</div>
+        </div>
+      </div>
+
+      <!-- ── INSTAGRAM WIZARD ───────────────────────────────────────────── -->
+      <div style="background:white;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <h3 style="font-size:17px;font-weight:700;margin-bottom:20px">
+          <i class="fab fa-instagram" style="color:#e1306c"></i> Instagram Setup
+        </h3>
+
+        <!-- Step 1 -->
+        <div class="wizard-step active" id="ig-step-1">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Create a Facebook App</div>
+            <div class="step-desc">You need a free Facebook Developer App to get an App ID and Secret. This takes 2 minutes and is completely free.</div>
+            <div class="screenshot-hint">
+              <strong>How to:</strong>
+              <ol style="margin:6px 0 0 16px;padding:0">
+                <li>Go to <a href="https://developers.facebook.com/apps" target="_blank">developers.facebook.com/apps</a></li>
+                <li>Click <strong>Create App</strong> → choose <strong>Consumer</strong> (not Business)</li>
+                <li>Add app name → Continue</li>
+                <li>Go to <strong>Settings → Basic</strong> and copy your <strong>App ID</strong> and <strong>App Secret</strong></li>
+                <li>Under <strong>Add a Product</strong>, click <strong>Set Up</strong> next to <strong>Instagram Graph API</strong></li>
+              </ol>
+            </div>
+            <button class="btn btn-secondary" style="font-size:13px" onclick="toggleIGStep2()">
+              <i class="fas fa-check"></i> I have my App ID and Secret
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="wizard-step blocked" id="ig-step-2">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Enter App Credentials</div>
+            <div class="step-desc">Paste your Facebook App ID and App Secret below.</div>
+            <div class="mini-form open">
+              <div class="form-group">
+                <label>Facebook App ID</label>
+                <input id="ig-app-id" type="text" placeholder="1234567890123456">
+              </div>
+              <div class="form-group">
+                <label>Facebook App Secret</label>
+                <input id="ig-app-secret" type="password" placeholder="abc123...">
+              </div>
+            </div>
+            <div class="screenshot-hint">
+              Also add <code>http://localhost:8000</code> as a valid OAuth redirect domain in your Facebook App under <strong>Facebook Login → Settings → Valid OAuth Redirect URIs</strong>:
+              <code style="display:block;margin-top:4px;word-break:break-all">http://localhost:8000/api/oauth/instagram/callback</code>
+            </div>
+            <button class="btn btn-secondary" style="font-size:13px" onclick="activateIGConnect()">
+              <i class="fas fa-arrow-right"></i> Next
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 3 — One-click connect -->
+        <div class="wizard-step blocked" id="ig-step-3">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Connect Your Instagram Account</div>
+            <div class="step-desc">Click the button below. A Facebook login popup will open. Approve access — your token will be saved automatically.</div>
+            <button class="connect-btn ig" id="ig-connect-btn" onclick="connectInstagram()">
+              <i class="fab fa-instagram"></i> Connect Instagram — One Click
+            </button>
+            <div id="ig-connect-status" style="margin-top:12px;display:none"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── YOUTUBE WIZARD ─────────────────────────────────────────────── -->
+      <div style="background:white;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <h3 style="font-size:17px;font-weight:700;margin-bottom:20px">
+          <i class="fab fa-youtube" style="color:#ff0000"></i> YouTube Setup
+        </h3>
+
+        <!-- Step 1 -->
+        <div class="wizard-step active" id="yt-step-1">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Enable YouTube Data API</div>
+            <div class="step-desc">Create a free Google Cloud project and enable the YouTube Data API v3.</div>
+            <div class="screenshot-hint">
+              <strong>How to:</strong>
+              <ol style="margin:6px 0 0 16px;padding:0">
+                <li>Go to <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank">Google Cloud Console → YouTube Data API v3</a></li>
+                <li>Click <strong>Enable</strong></li>
+                <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Credentials</a> → <strong>Create Credentials</strong> → <strong>OAuth 2.0 Client ID</strong></li>
+                <li>Choose <strong>Web application</strong></li>
+                <li>Under <strong>Authorized redirect URIs</strong> add: <code>http://localhost:8000/api/oauth/youtube/callback</code></li>
+                <li>Download/copy the <strong>Client ID</strong> and <strong>Client Secret</strong></li>
+              </ol>
+            </div>
+            <button class="btn btn-secondary" style="font-size:13px" onclick="toggleYTStep2()">
+              <i class="fas fa-check"></i> I have my Client ID and Secret
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="wizard-step blocked" id="yt-step-2">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Enter Client Credentials</div>
+            <div class="step-desc">Paste your Google OAuth2 Client ID and Client Secret.</div>
+            <div class="mini-form open">
+              <div class="form-group">
+                <label>Client ID</label>
+                <input id="yt-oauth-client-id" type="text" placeholder="xxxx.apps.googleusercontent.com">
+              </div>
+              <div class="form-group">
+                <label>Client Secret</label>
+                <input id="yt-oauth-client-secret" type="password" placeholder="GOCSPX-xxxxxxx">
+              </div>
+            </div>
+            <div class="screenshot-hint">
+              Make sure <strong>http://localhost:8000/api/oauth/youtube/callback</strong> is added as an Authorized Redirect URI in your Google Cloud Console OAuth client settings.
+            </div>
+            <button class="btn btn-secondary" style="font-size:13px" onclick="activateYTConnect()">
+              <i class="fas fa-arrow-right"></i> Next
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 3 — One-click connect -->
+        <div class="wizard-step blocked" id="yt-step-3">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Connect Your YouTube Channel</div>
+            <div class="step-desc">Click the button below. A Google login popup will open. Select your account and approve access — your refresh token will be saved automatically and never expires.</div>
+            <button class="connect-btn yt" id="yt-connect-btn" onclick="connectYouTube()">
+              <i class="fab fa-youtube"></i> Connect YouTube — One Click
+            </button>
+            <div id="yt-connect-status" style="margin-top:12px;display:none"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Manual fallback -->
+      <details style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <summary style="cursor:pointer;font-weight:600;font-size:14px;color:var(--gray)">
+          Advanced: Enter tokens manually (if one-click doesn't work)
+        </summary>
+        <div style="margin-top:16px">
+          <h4 style="margin-bottom:12px;font-size:14px">Instagram Manual</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div class="form-group" style="margin:0"><label>Access Token</label><input id="man-ig-token" type="password" placeholder="EAAxxxx"></div>
+            <div class="form-group" style="margin:0"><label>User ID</label><input id="man-ig-uid" type="text" placeholder="17841400..."></div>
+          </div>
+          <button class="btn btn-primary" style="font-size:13px" onclick="manualSaveIG()"><i class="fas fa-save"></i> Save Instagram</button>
+
+          <h4 style="margin:20px 0 12px;font-size:14px">YouTube Manual</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+            <div class="form-group" style="margin:0"><label>Client ID</label><input id="man-yt-cid" type="text" placeholder="xxxx.apps..."></div>
+            <div class="form-group" style="margin:0"><label>Client Secret</label><input id="man-yt-csec" type="password" placeholder="GOCSPX-..."></div>
+            <div class="form-group" style="margin:0"><label>Refresh Token</label><input id="man-yt-ref" type="password" placeholder="1//xxxxx"></div>
+          </div>
+          <button class="btn btn-primary" style="font-size:13px" onclick="manualSaveYT()"><i class="fas fa-save"></i> Save YouTube</button>
+        </div>
+      </details>
+
+    </div>
 </body>
 </html>
+
+
 
 
 

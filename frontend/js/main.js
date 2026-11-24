@@ -1139,3 +1139,298 @@ async function engageWithSubscribers() {
     } catch(e) { showToast("Failed: " + e.message, "error"); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-hand-holding-heart"></i> Engage with Subscribers'; }
 }
+
+
+// ════════════════════════════════════════════════════════════════════════════
+//  SETUP WIZARD — One-Click OAuth + Manual fallback
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── Wizard step activation helpers ───────────────────────────────────────────
+
+function activateStep(stepId) {
+    const el = document.getElementById(stepId);
+    if (el) { el.classList.remove("blocked"); el.classList.add("active"); }
+}
+function markStepDone(stepId) {
+    const el = document.getElementById(stepId);
+    if (el) { el.classList.remove("active"); el.classList.add("done"); }
+}
+
+// ── Instagram wizard ──────────────────────────────────────────────────────────
+
+function toggleIGStep2() {
+    markStepDone("ig-step-1");
+    activateStep("ig-step-2");
+    document.getElementById("ig-step-2")?.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function activateIGConnect() {
+    const appId     = document.getElementById("ig-app-id")?.value?.trim();
+    const appSecret = document.getElementById("ig-app-secret")?.value?.trim();
+    if (!appId || !appSecret) {
+        showToast("Please enter your App ID and App Secret", "warning");
+        return;
+    }
+    markStepDone("ig-step-2");
+    activateStep("ig-step-3");
+    document.getElementById("ig-step-3")?.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+async function connectInstagram() {
+    const appId     = document.getElementById("ig-app-id")?.value?.trim();
+    const appSecret = document.getElementById("ig-app-secret")?.value?.trim();
+    if (!appId || !appSecret) {
+        showToast("Please complete Steps 1 and 2 first", "warning");
+        return;
+    }
+
+    const btn = document.getElementById("ig-connect-btn");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening login window...';
+
+    try {
+        // Get the auth URL from the backend
+        const res = await post("/api/oauth/instagram/start", {
+            app_id:     appId,
+            app_secret: appSecret,
+        });
+
+        const authUrl = res.auth_url;
+
+        // Open popup centered on screen
+        const w = 600, h = 700;
+        const left = Math.round(screen.width  / 2 - w / 2);
+        const top  = Math.round(screen.height / 2 - h / 2);
+        const popup = window.open(authUrl, "ig_oauth",
+            `width=${w},height=${h},left=${left},top=${top},scrollbars=yes`);
+
+        const statusEl = document.getElementById("ig-connect-status");
+
+        if (statusEl) {
+            statusEl.style.display = "block";
+            statusEl.innerHTML = `<div style="background:#eff6ff;padding:12px;border-radius:8px;font-size:13px">
+                <i class="fas fa-info-circle" style="color:#3b82f6"></i>
+                Login popup opened. Approve access in the new window...
+            </div>`;
+        }
+
+        // Listen for postMessage from the popup
+        window.addEventListener("message", async function handler(e) {
+            if (e.data?.type === "oauth_success" && e.data?.platform === "instagram") {
+                window.removeEventListener("message", handler);
+                popup?.close();
+                markStepDone("ig-step-3");
+
+                if (statusEl) {
+                    statusEl.innerHTML = `<div style="background:#d1fae5;padding:12px;border-radius:8px;font-size:13px;color:#065f46">
+                        <strong><i class="fas fa-check-circle"></i> Instagram Connected!</strong><br>
+                        Live mode is now active. You can start growing followers.
+                    </div>`;
+                }
+
+                // Update status cards
+                await updateConnectionStatus();
+                showToast("Instagram connected! Live mode active.", "success");
+                btn.innerHTML = '<i class="fab fa-instagram"></i> Connected ✓';
+                btn.style.background = "#10b981";
+            }
+            if (e.data?.type === "oauth_error" && e.data?.platform === "instagram") {
+                window.removeEventListener("message", handler);
+                popup?.close();
+                showToast("Instagram connection failed: " + e.data.error, "error");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fab fa-instagram"></i> Connect Instagram — One Click';
+            }
+        });
+
+        // Check if popup was blocked
+        if (!popup || popup.closed) {
+            showToast("Popup blocked! Please allow popups for this site, then try again.", "error");
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fab fa-instagram"></i> Connect Instagram — One Click';
+        }
+
+    } catch (e) {
+        showToast("Failed to start OAuth: " + e.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fab fa-instagram"></i> Connect Instagram — One Click';
+    }
+}
+
+// ── YouTube wizard ────────────────────────────────────────────────────────────
+
+function toggleYTStep2() {
+    markStepDone("yt-step-1");
+    activateStep("yt-step-2");
+    document.getElementById("yt-step-2")?.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function activateYTConnect() {
+    const cid = document.getElementById("yt-oauth-client-id")?.value?.trim();
+    const cs  = document.getElementById("yt-oauth-client-secret")?.value?.trim();
+    if (!cid || !cs) {
+        showToast("Please enter your Client ID and Client Secret", "warning");
+        return;
+    }
+    markStepDone("yt-step-2");
+    activateStep("yt-step-3");
+    document.getElementById("yt-step-3")?.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+async function connectYouTube() {
+    const clientId     = document.getElementById("yt-oauth-client-id")?.value?.trim();
+    const clientSecret = document.getElementById("yt-oauth-client-secret")?.value?.trim();
+    if (!clientId || !clientSecret) {
+        showToast("Please complete Steps 1 and 2 first", "warning");
+        return;
+    }
+
+    const btn = document.getElementById("yt-connect-btn");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening Google login...';
+
+    try {
+        const res = await post("/api/oauth/youtube/start", {
+            client_id:     clientId,
+            client_secret: clientSecret,
+        });
+
+        const authUrl = res.auth_url;
+        const w = 500, h = 650;
+        const left = Math.round(screen.width  / 2 - w / 2);
+        const top  = Math.round(screen.height / 2 - h / 2);
+        const popup = window.open(authUrl, "yt_oauth",
+            `width=${w},height=${h},left=${left},top=${top},scrollbars=yes`);
+
+        const statusEl = document.getElementById("yt-connect-status");
+        if (statusEl) {
+            statusEl.style.display = "block";
+            statusEl.innerHTML = `<div style="background:#eff6ff;padding:12px;border-radius:8px;font-size:13px">
+                <i class="fas fa-info-circle" style="color:#3b82f6"></i>
+                Google login popup opened. Select your account and approve access...
+            </div>`;
+        }
+
+        window.addEventListener("message", async function handler(e) {
+            if (e.data?.type === "oauth_success" && e.data?.platform === "youtube") {
+                window.removeEventListener("message", handler);
+                popup?.close();
+                markStepDone("yt-step-3");
+
+                if (statusEl) {
+                    statusEl.innerHTML = `<div style="background:#d1fae5;padding:12px;border-radius:8px;font-size:13px;color:#065f46">
+                        <strong><i class="fas fa-check-circle"></i> YouTube Connected!</strong><br>
+                        Refresh token saved. Live mode is now active. Watch time tracking enabled.
+                    </div>`;
+                }
+
+                await updateConnectionStatus();
+                showToast("YouTube connected! Live mode active.", "success");
+                btn.innerHTML = '<i class="fab fa-youtube"></i> Connected ✓';
+                btn.style.background = "#10b981";
+            }
+            if (e.data?.type === "oauth_error" && e.data?.platform === "youtube") {
+                window.removeEventListener("message", handler);
+                popup?.close();
+                showToast("YouTube connection failed: " + e.data.error, "error");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fab fa-youtube"></i> Connect YouTube — One Click';
+            }
+        });
+
+        if (!popup || popup.closed) {
+            showToast("Popup blocked! Please allow popups for this site, then try again.", "error");
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fab fa-youtube"></i> Connect YouTube — One Click';
+        }
+
+    } catch (e) {
+        showToast("Failed to start OAuth: " + e.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fab fa-youtube"></i> Connect YouTube — One Click';
+    }
+}
+
+// ── Status card updater ───────────────────────────────────────────────────────
+
+async function updateConnectionStatus() {
+    try {
+        const ig = await (await fetch(`${API}/api/instagram/status`)).json();
+        const yt = await (await fetch(`${API}/api/youtube/status`)).json();
+
+        // IG pill
+        const igPill = document.getElementById("ig-connection-pill");
+        const igDetail = document.getElementById("ig-connection-detail");
+        if (igPill) {
+            igPill.textContent = ig.configured ? "LIVE" : "SIM";
+            igPill.className   = "status-pill " + (ig.configured ? "pill-live" : "pill-sim");
+        }
+        if (igDetail) {
+            igDetail.textContent = ig.configured
+                ? "Connected · User ID: " + (ig.user_id || "—") + " · Follows left: " + (ig.daily_stats?.follows_remaining ?? "—")
+                : "Not connected — configure below";
+        }
+
+        // YT pill
+        const ytPill = document.getElementById("yt-connection-pill");
+        const ytDetail = document.getElementById("yt-connection-detail");
+        if (ytPill) {
+            ytPill.textContent = yt.configured ? "LIVE" : "SIM";
+            ytPill.className   = "status-pill " + (yt.configured ? "pill-live" : "pill-sim");
+        }
+        if (ytDetail) {
+            ytDetail.textContent = yt.configured
+                ? "Connected · Quota: " + (yt.daily_stats?.quota_used ?? 0) + " / 10,000 units used today"
+                : "Not connected — configure below";
+        }
+
+        // Also sync the mode badges on other pages
+        const igModeBadge = document.getElementById("ig-mode-badge");
+        const igTgtBadge  = document.getElementById("ig-tgt-mode-badge");
+        const ytModeBadge = document.getElementById("yt-mode-badge");
+        const ytMonBadge  = document.getElementById("yt-mon-mode-badge");
+
+        if (igModeBadge) { igModeBadge.textContent = ig.configured ? "LIVE" : "SIM"; igModeBadge.style.background = ig.configured ? "var(--success)" : "var(--warning)"; }
+        if (igTgtBadge)  { igTgtBadge.textContent  = ig.configured ? "LIVE" : "SIM"; igTgtBadge.style.background  = ig.configured ? "var(--success)" : "var(--warning)"; }
+        if (ytModeBadge) { ytModeBadge.textContent = yt.configured ? "LIVE" : "SIM"; ytModeBadge.style.background = yt.configured ? "var(--success)" : "var(--warning)"; }
+        if (ytMonBadge)  { ytMonBadge.textContent  = yt.configured ? "LIVE" : "SIM"; ytMonBadge.style.background  = yt.configured ? "var(--success)" : "var(--warning)"; }
+
+    } catch {}
+}
+
+// ── Manual fallback ───────────────────────────────────────────────────────────
+
+async function manualSaveIG() {
+    const token = document.getElementById("man-ig-token")?.value?.trim();
+    const uid   = document.getElementById("man-ig-uid")?.value?.trim();
+    if (!token || !uid) { showToast("Please fill in both fields", "warning"); return; }
+    try {
+        await post("/api/instagram/credentials", { instagram_access_token: token, instagram_user_id: uid });
+        showToast("Instagram credentials saved!", "success");
+        await updateConnectionStatus();
+    } catch(e) { showToast("Failed: " + e.message, "error"); }
+}
+
+async function manualSaveYT() {
+    const cid  = document.getElementById("man-yt-cid")?.value?.trim();
+    const csec = document.getElementById("man-yt-csec")?.value?.trim();
+    const ref  = document.getElementById("man-yt-ref")?.value?.trim();
+    if (!cid || !csec || !ref) { showToast("Please fill in all three fields", "warning"); return; }
+    try {
+        await post("/api/youtube/credentials", { client_id: cid, client_secret: csec, refresh_token: ref, channel_id: "" });
+        showToast("YouTube credentials saved!", "success");
+        await updateConnectionStatus();
+    } catch(e) { showToast("Failed: " + e.message, "error"); }
+}
+
+// Auto-load status when setup page opens
+document.querySelectorAll(".nav-item").forEach(item => {
+    item.addEventListener("click", () => {
+        if (item.getAttribute("data-page") === "setup") {
+            setTimeout(updateConnectionStatus, 300);
+        }
+    });
+});
+
+// Initial status check
+setTimeout(updateConnectionStatus, 2500);

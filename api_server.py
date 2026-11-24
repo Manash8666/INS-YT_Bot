@@ -1132,3 +1132,237 @@ async def youtube_engage_subscribers(req: EngageSubscribersRequest):
     )
     return {"status": "done", "job_id": f"yt_eng_{uuid.uuid4().hex[:8]}", **result}
 
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  ONE-CLICK OAUTH 2.0  — Instagram + YouTube
+#  User clicks Connect, approves in browser, tokens saved automatically.
+# ════════════════════════════════════════════════════════════════════════════
+
+import webbrowser
+from fastapi.responses import HTMLResponse, RedirectResponse
+from src.youtube_instagram_bot.auth.oauth_flow import (
+    instagram_auth_url, instagram_exchange_code,
+    youtube_auth_url,   youtube_exchange_code,
+    save_to_env, generate_state, _pending,
+)
+
+# Callback base URL — the API server itself handles the redirect
+_CALLBACK_BASE = "http://localhost:8000"
+
+# Shared success/error HTML pages returned to the popup window
+def _success_page(platform: str, detail: str) -> str:
+    icon = "📸" if platform == "instagram" else "▶️"
+    color = "#e1306c" if platform == "instagram" else "#ff0000"
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<title>{platform.title()} Connected</title>
+<style>body{{font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc}}
+.card{{background:white;border-radius:16px;padding:40px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.1);max-width:400px}}
+.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:20px;font-weight:700;color:#1e293b;margin-bottom:8px}}
+.detail{{font-size:14px;color:#64748b;margin-bottom:24px}}
+.badge{{display:inline-block;background:{color};color:white;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600}}
+</style></head><body>
+<div class="card">
+  <div class="icon">{icon}</div>
+  <div class="title">{platform.title()} Connected!</div>
+  <div class="detail">{detail}</div>
+  <div class="badge">🟢 LIVE MODE ACTIVE</div>
+  <p style="font-size:12px;color:#94a3b8;margin-top:20px">This window will close automatically...</p>
+</div>
+<script>
+  // Notify the parent dashboard window
+  if (window.opener) {{
+    window.opener.postMessage({{type:"oauth_success",platform:"{platform}"}}, "*");
+    setTimeout(() => window.close(), 2000);
+  }}
+</script></body></html>"""
+
+
+def _error_page(platform: str, error: str) -> str:
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Connection Failed</title>
+<style>body{{font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc}}
+.card{{background:white;border-radius:16px;padding:40px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.1);max-width:420px}}
+.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:20px;font-weight:700;color:#ef4444;margin-bottom:8px}}
+.err{{font-size:13px;color:#64748b;background:#fef2f2;padding:12px;border-radius:8px;text-align:left;word-break:break-all}}
+</style></head><body>
+<div class="card">
+  <div class="icon">❌</div>
+  <div class="title">Connection Failed</div>
+  <div class="err">{error}</div>
+  <p style="font-size:12px;color:#94a3b8;margin-top:20px">Close this window and try again.</p>
+</div>
+<script>if(window.opener){{window.opener.postMessage({{type:"oauth_error",platform:"{platform}",error:"{error}"}}, "*");}}</script>
+</body></html>"""
+
+
+# ── Instagram OAuth ───────────────────────────────────────────────────────────
+
+class IGOAuthStartRequest(BaseModel):
+    app_id:     str = Field(..., min_length=4,  description="Facebook App ID")
+    app_secret: str = Field(..., min_length=8,  description="Facebook App Secret")
+
+
+@app.post("/api/oauth/instagram/start", tags=["OAuth"])
+async def oauth_instagram_start(req: IGOAuthStartRequest):
+    """
+    Step 1 of Instagram one-click OAuth.
+    Returns the Facebook authorization URL — open it in a popup or new tab.
+    """
+    state = generate_state()
+    redirect_uri = f"{_CALLBACK_BASE}/api/oauth/instagram/callback"
+    _pending[state] = {
+        "platform":    "instagram",
+        "app_id":      req.app_id,
+        "app_secret":  req.app_secret,
+        "redirect_uri": redirect_uri,
+    }
+    url = instagram_auth_url(req.app_id, redirect_uri, state)
+    log.info("oauth.instagram.start", state=state[:8])
+    return {
+        "auth_url": url,
+        "state":    state,
+        "message":  "Open auth_url in a popup window. Tokens will be saved automatically on approval.",
+    }
+
+
+@app.get("/api/oauth/instagram/callback", tags=["OAuth"], response_class=HTMLResponse)
+async def oauth_instagram_callback(code: str = None, state: str = None, error: str = None):
+    """
+    Step 2 — Facebook redirects here after user approves.
+    Exchanges code for long-lived token, saves to .env, hot-reloads client.
+    """
+    if error:
+        return HTMLResponse(_error_page("instagram", f"User denied access: {error}"))
+
+    if not state or state not in _pending:
+        return HTMLResponse(_error_page("instagram", "Invalid or expired state parameter. Please try again."))
+
+    ctx = _pending.pop(state)
+
+    try:
+        result = instagram_exchange_code(
+            app_id=ctx["app_id"],
+            app_secret=ctx["app_secret"],
+            redirect_uri=ctx["redirect_uri"],
+            code=code,
+        )
+    except Exception as exc:
+        return HTMLResponse(_error_page("instagram", str(exc)))
+
+    access_token = result["access_token"]
+    ig_user_id   = result.get("ig_user_id", "")
+
+    # Persist to .env
+    env_path = os.path.join(_ROOT, ".env")
+    save_to_env(env_path, {
+        "INSTAGRAM_ACCESS_TOKEN": access_token,
+        "INSTAGRAM_USER_ID":      ig_user_id,
+        "INSTAGRAM_APP_ID":       ctx["app_id"],
+        "INSTAGRAM_APP_SECRET":   ctx["app_secret"],
+    })
+
+    # Hot-reload settings + IG client
+    for k, v in [("INSTAGRAM_ACCESS_TOKEN", access_token),
+                 ("INSTAGRAM_USER_ID",      ig_user_id)]:
+        os.environ[k] = v
+    get_settings.cache_clear()
+
+    from src.youtube_instagram_bot.instagram.graph_client import InstagramGraphClient
+    app_state.engagement.ig_client  = InstagramGraphClient(access_token, ig_user_id)
+    app_state.engagement.ig_user_id = ig_user_id
+    log.info("oauth.instagram.complete", user_id=ig_user_id)
+
+    expires_days = result.get("expires_in", 5183944) // 86400
+    return HTMLResponse(_success_page(
+        "instagram",
+        f"User ID: {ig_user_id or 'detected'} · Token valid ~{expires_days} days"
+    ))
+
+
+# ── YouTube OAuth ─────────────────────────────────────────────────────────────
+
+class YTOAuthStartRequest(BaseModel):
+    client_id:     str = Field(..., min_length=10, description="Google OAuth2 Client ID")
+    client_secret: str = Field(..., min_length=4,  description="Google OAuth2 Client Secret")
+
+
+@app.post("/api/oauth/youtube/start", tags=["OAuth"])
+async def oauth_youtube_start(req: YTOAuthStartRequest):
+    """
+    Step 1 of YouTube one-click OAuth.
+    Returns the Google authorization URL — open it in a popup or new tab.
+    """
+    state = generate_state()
+    redirect_uri = f"{_CALLBACK_BASE}/api/oauth/youtube/callback"
+    _pending[state] = {
+        "platform":      "youtube",
+        "client_id":     req.client_id,
+        "client_secret": req.client_secret,
+        "redirect_uri":  redirect_uri,
+    }
+    url = youtube_auth_url(req.client_id, redirect_uri, state)
+    log.info("oauth.youtube.start", state=state[:8])
+    return {
+        "auth_url": url,
+        "state":    state,
+        "message":  "Open auth_url in a popup window. Tokens will be saved automatically on approval.",
+    }
+
+
+@app.get("/api/oauth/youtube/callback", tags=["OAuth"], response_class=HTMLResponse)
+async def oauth_youtube_callback(code: str = None, state: str = None, error: str = None):
+    """
+    Step 2 — Google redirects here after user approves.
+    Exchanges code for access + refresh tokens, saves to .env, hot-reloads.
+    """
+    if error:
+        return HTMLResponse(_error_page("youtube", f"User denied access: {error}"))
+
+    if not state or state not in _pending:
+        return HTMLResponse(_error_page("youtube", "Invalid or expired state. Please try again."))
+
+    ctx = _pending.pop(state)
+
+    try:
+        result = youtube_exchange_code(
+            client_id=ctx["client_id"],
+            client_secret=ctx["client_secret"],
+            redirect_uri=ctx["redirect_uri"],
+            code=code,
+        )
+    except Exception as exc:
+        return HTMLResponse(_error_page("youtube", str(exc)))
+
+    refresh_token = result["refresh_token"]
+    access_token  = result.get("access_token", "")
+
+    # Persist to .env
+    env_path = os.path.join(_ROOT, ".env")
+    save_to_env(env_path, {
+        "YOUTUBE_CLIENT_ID":     ctx["client_id"],
+        "YOUTUBE_CLIENT_SECRET": ctx["client_secret"],
+        "YOUTUBE_REFRESH_TOKEN": refresh_token,
+    })
+
+    # Hot-reload settings + YT client
+    for k, v in [("YOUTUBE_CLIENT_ID",     ctx["client_id"]),
+                 ("YOUTUBE_CLIENT_SECRET",  ctx["client_secret"]),
+                 ("YOUTUBE_REFRESH_TOKEN",  refresh_token)]:
+        os.environ[k] = v
+    get_settings.cache_clear()
+
+    from src.youtube_instagram_bot.youtube.data_client import YouTubeDataClient
+    new_yt_client = YouTubeDataClient(
+        client_id=ctx["client_id"],
+        client_secret=ctx["client_secret"],
+        refresh_token=refresh_token,
+    )
+    app_state.youtube.yt_client = new_yt_client
+    log.info("oauth.youtube.complete")
+
+    return HTMLResponse(_success_page(
+        "youtube",
+        "Refresh token saved permanently · YouTube client activated in live mode"
+    ))
