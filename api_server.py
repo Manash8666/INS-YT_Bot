@@ -1585,3 +1585,273 @@ async def auth_list_users(admin: dict = Depends(admin_user)):
             ],
             "total": len(rows),
         }
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  NEW FEATURES — AI Generator, Analytics, Multi-Account, Webhooks, Proxy, SaaS
+# ════════════════════════════════════════════════════════════════════════════
+
+from src.youtube_instagram_bot.ai_generator  import AIContentGenerator
+from src.youtube_instagram_bot.analytics     import AnalyticsManager
+from src.youtube_instagram_bot.accounts      import MultiAccountManager
+from src.youtube_instagram_bot.webhooks      import WebhookManager
+from src.youtube_instagram_bot.proxy         import ProxyManager
+from src.youtube_instagram_bot.saas          import SaaSManager, TIERS
+
+# ── Initialise new components ─────────────────────────────────────────────────
+_ai_gen      = AIContentGenerator(api_key=os.environ.get("OPENAI_API_KEY",""))
+_analytics   = AnalyticsManager(database_url=os.environ.get("DATABASE_URL","sqlite:///./bot.db"))
+_mac_manager = MultiAccountManager(database_url=os.environ.get("DATABASE_URL","sqlite:///./bot.db"))
+_webhook_mgr = WebhookManager(
+    discord_url     = os.environ.get("DISCORD_WEBHOOK_URL",""),
+    telegram_token  = os.environ.get("TELEGRAM_BOT_TOKEN",""),
+    telegram_chat_id= os.environ.get("TELEGRAM_CHAT_ID",""),
+    slack_url       = os.environ.get("SLACK_WEBHOOK_URL",""),
+    smtp_host       = os.environ.get("SMTP_HOST",""),
+    smtp_user       = os.environ.get("SMTP_USER",""),
+    smtp_pass       = os.environ.get("SMTP_PASS",""),
+    smtp_to         = os.environ.get("SMTP_TO",""),
+)
+_proxy_mgr   = ProxyManager()
+_saas_mgr    = SaaSManager(
+    database_url     = os.environ.get("DATABASE_URL","sqlite:///./bot.db"),
+    stripe_secret_key= os.environ.get("STRIPE_SECRET_KEY",""),
+)
+
+# Seed demo analytics data on startup
+try:
+    _analytics.seed_demo_data()
+except Exception:
+    pass
+
+# ── AI Content Generator ──────────────────────────────────────────────────────
+
+class AITitleRequest(BaseModel):
+    topic: str = Field(..., min_length=1, max_length=200)
+    style: str = Field(default="engaging", pattern="^(engaging|clickbait|informative|listicle|how-to)$")
+
+class AIDescriptionRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    keywords: list[str] = Field(default=[])
+
+class AICaptionRequest(BaseModel):
+    topic: str = Field(..., min_length=1, max_length=200)
+    tone: str  = Field(default="engaging")
+    include_hashtags: bool = True
+
+class AIHashtagRequest(BaseModel):
+    niche: str  = Field(..., min_length=1)
+    count: int  = Field(default=30, ge=5, le=50)
+
+class AIIdeasRequest(BaseModel):
+    niche:    str = Field(..., min_length=1)
+    platform: str = Field(default="both")
+    count:    int = Field(default=10, ge=3, le=20)
+
+class AIScriptRequest(BaseModel):
+    topic:            str = Field(..., min_length=1)
+    duration_minutes: int = Field(default=5, ge=1, le=30)
+
+class AIBioRequest(BaseModel):
+    niche: str = Field(..., min_length=1)
+    name:  str = Field(default="")
+    cta:   str = Field(default="Follow for daily tips")
+
+@app.post("/api/ai/youtube/title",       tags=["AI Generator"])
+async def ai_yt_title(req: AITitleRequest,       user: dict = Depends(current_user)):
+    return _ai_gen.youtube_title(req.topic, req.style)
+
+@app.post("/api/ai/youtube/description", tags=["AI Generator"])
+async def ai_yt_description(req: AIDescriptionRequest, user: dict = Depends(current_user)):
+    return _ai_gen.youtube_description(req.title, req.keywords)
+
+@app.post("/api/ai/youtube/tags",        tags=["AI Generator"])
+async def ai_yt_tags(req: AIHashtagRequest, user: dict = Depends(current_user)):
+    return _ai_gen.youtube_tags(req.niche, req.count)
+
+@app.post("/api/ai/youtube/script",      tags=["AI Generator"])
+async def ai_yt_script(req: AIScriptRequest, user: dict = Depends(current_user)):
+    return _ai_gen.youtube_script(req.topic, req.duration_minutes)
+
+@app.post("/api/ai/instagram/caption",   tags=["AI Generator"])
+async def ai_ig_caption(req: AICaptionRequest, user: dict = Depends(current_user)):
+    return _ai_gen.instagram_caption(req.topic, req.tone, req.include_hashtags)
+
+@app.post("/api/ai/instagram/hashtags",  tags=["AI Generator"])
+async def ai_ig_hashtags(req: AIHashtagRequest, user: dict = Depends(current_user)):
+    return _ai_gen.instagram_hashtags(req.niche, req.count)
+
+@app.post("/api/ai/instagram/bio",       tags=["AI Generator"])
+async def ai_ig_bio(req: AIBioRequest, user: dict = Depends(current_user)):
+    return _ai_gen.instagram_bio(req.niche, req.name, req.cta)
+
+@app.post("/api/ai/content-ideas",       tags=["AI Generator"])
+async def ai_ideas(req: AIIdeasRequest, user: dict = Depends(current_user)):
+    return _ai_gen.content_ideas(req.niche, req.platform, req.count)
+
+@app.get("/api/ai/status",               tags=["AI Generator"])
+async def ai_status(user: dict = Depends(current_user)):
+    return {"mode": "live" if _ai_gen._live else "simulation", "model": _ai_gen.model, "configured": _ai_gen._live, "message": "" if _ai_gen._live else "Add OPENAI_API_KEY to .env to enable real AI generation"}
+
+# ── Analytics ─────────────────────────────────────────────────────────────────
+
+@app.get("/api/analytics/series",        tags=["Analytics"])
+async def analytics_series(platform: str, account_id: str = "demo", metric: str = "followers", days: int = 30, user: dict = Depends(current_user)):
+    series = _analytics.get_series(platform, account_id, metric, days)
+    return {"platform": platform, "account_id": account_id, "metric": metric, "days": days, "series": series, "count": len(series)}
+
+@app.get("/api/analytics/summary",       tags=["Analytics"])
+async def analytics_summary(platform: str, account_id: str = "demo", user: dict = Depends(current_user)):
+    return {"platform": platform, "account_id": account_id, "summary": _analytics.get_summary(platform, account_id)}
+
+@app.post("/api/analytics/snapshot",     tags=["Analytics"])
+async def analytics_snapshot(platform: str, account_id: str = "demo", user: dict = Depends(current_user)):
+    if platform == "instagram" and app_state.engagement.ig_client:
+        result = _analytics.snapshot_instagram(account_id, app_state.engagement.ig_client)
+    elif platform == "youtube" and app_state.youtube.yt_client:
+        result = _analytics.snapshot_youtube(account_id, app_state.youtube.yt_client)
+    else:
+        result = {"mode": "simulation", "message": "Configure credentials to record live snapshots"}
+    return result
+
+@app.get("/api/analytics/overview",      tags=["Analytics"])
+async def analytics_overview(user: dict = Depends(current_user)):
+    ig_sum = _analytics.get_summary("instagram", "demo")
+    yt_sum = _analytics.get_summary("youtube",   "demo")
+    return {"instagram": ig_sum, "youtube": yt_sum}
+
+# ── Multi-Account Manager ─────────────────────────────────────────────────────
+
+class AddAccountRequest(BaseModel):
+    platform:     str = Field(..., pattern="^(instagram|youtube|rumble)$")
+    display_name: str = Field(..., min_length=1, max_length=128)
+    username:     str = Field(default="")
+    user_id:      str = Field(default="")
+    access_token: str = Field(default="")
+    tags:         str = Field(default="")
+    notes:        str = Field(default="")
+
+@app.get("/api/accounts",                tags=["Multi-Account"])
+async def accounts_list(platform: Optional[str] = None, user: dict = Depends(current_user)):
+    return {"accounts": _mac_manager.list_accounts(platform), "stats": _mac_manager.stats()}
+
+@app.post("/api/accounts",               tags=["Multi-Account"])
+async def accounts_add(req: AddAccountRequest, user: dict = Depends(current_user)):
+    acc = _mac_manager.add_account(req.platform, req.display_name, username=req.username, user_id=req.user_id, access_token=req.access_token, tags=req.tags, notes=req.notes)
+    _webhook_mgr.notify("New Account Added", f"Added {req.platform} account: {req.display_name}", "success")
+    return {"account": acc}
+
+@app.patch("/api/accounts/{account_id}", tags=["Multi-Account"])
+async def accounts_update(account_id: str, req: dict, user: dict = Depends(current_user)):
+    acc = _mac_manager.update_account(account_id, **req)
+    return {"account": acc}
+
+@app.delete("/api/accounts/{account_id}",tags=["Multi-Account"])
+async def accounts_delete(account_id: str, user: dict = Depends(current_user)):
+    ok = _mac_manager.delete_account(account_id)
+    return {"deleted": ok}
+
+@app.post("/api/accounts/{account_id}/set-default", tags=["Multi-Account"])
+async def accounts_set_default(account_id: str, platform: str, user: dict = Depends(current_user)):
+    _mac_manager.set_default(account_id, platform)
+    return {"message": f"Account {account_id} is now the default for {platform}"}
+
+# ── Webhooks ──────────────────────────────────────────────────────────────────
+
+class WebhookConfigRequest(BaseModel):
+    discord_url:      str = Field(default="")
+    telegram_token:   str = Field(default="")
+    telegram_chat_id: str = Field(default="")
+    slack_url:        str = Field(default="")
+    smtp_host:        str = Field(default="")
+    smtp_user:        str = Field(default="")
+    smtp_pass:        str = Field(default="")
+    smtp_to:          str = Field(default="")
+
+class WebhookNotifyRequest(BaseModel):
+    title:   str = Field(..., min_length=1)
+    message: str = Field(..., min_length=1)
+    level:   str = Field(default="info", pattern="^(info|success|warning|error)$")
+
+@app.get("/api/webhooks/status",         tags=["Webhooks"])
+async def webhooks_status(user: dict = Depends(current_user)):
+    return {"configured_channels": _webhook_mgr.configured_channels, "active": len(_webhook_mgr.configured_channels) > 0}
+
+@app.post("/api/webhooks/configure",     tags=["Webhooks"])
+async def webhooks_configure(req: WebhookConfigRequest, user: dict = Depends(current_user)):
+    env_path = os.path.join(_ROOT, ".env")
+    updates = {}
+    if req.discord_url:       updates["DISCORD_WEBHOOK_URL"]  = req.discord_url
+    if req.telegram_token:    updates["TELEGRAM_BOT_TOKEN"]   = req.telegram_token
+    if req.telegram_chat_id:  updates["TELEGRAM_CHAT_ID"]     = req.telegram_chat_id
+    if req.slack_url:         updates["SLACK_WEBHOOK_URL"]    = req.slack_url
+    if req.smtp_host:         updates["SMTP_HOST"] = req.smtp_host
+    if req.smtp_user:         updates["SMTP_USER"] = req.smtp_user
+    if req.smtp_pass:         updates["SMTP_PASS"] = req.smtp_pass
+    if req.smtp_to:           updates["SMTP_TO"]   = req.smtp_to
+    if updates:
+        from src.youtube_instagram_bot.auth.oauth_flow import save_to_env
+        save_to_env(env_path, updates)
+        for k, v in updates.items():
+            os.environ[k] = v
+        # Hot-reload webhook manager
+        global _webhook_mgr
+        _webhook_mgr = WebhookManager(**{k.lower().replace("discord_webhook_url","discord_url").replace("telegram_bot_token","telegram_token"): os.environ.get(k,"") for k in ["DISCORD_WEBHOOK_URL","TELEGRAM_BOT_TOKEN","TELEGRAM_CHAT_ID","SLACK_WEBHOOK_URL","SMTP_HOST","SMTP_USER","SMTP_PASS","SMTP_TO"]})
+    return {"message": "Webhook configuration saved", "channels": _webhook_mgr.configured_channels}
+
+@app.post("/api/webhooks/test",          tags=["Webhooks"])
+async def webhooks_test(user: dict = Depends(current_user)):
+    return _webhook_mgr.test_channels()
+
+@app.post("/api/webhooks/notify",        tags=["Webhooks"])
+async def webhooks_notify(req: WebhookNotifyRequest, user: dict = Depends(current_user)):
+    return _webhook_mgr.notify(req.title, req.message, req.level)
+
+# ── Proxy ─────────────────────────────────────────────────────────────────────
+
+class ProxyAddRequest(BaseModel):
+    proxies: list[str] = Field(..., min_length=1, description="List of proxy strings: host:port or user:pass@host:port")
+    proxy_type: str    = Field(default="http", pattern="^(http|socks5)$")
+
+@app.get("/api/proxy/stats",             tags=["Proxy"])
+async def proxy_stats(user: dict = Depends(current_user)):
+    return _proxy_mgr.stats()
+
+@app.post("/api/proxy/add",              tags=["Proxy"])
+async def proxy_add(req: ProxyAddRequest, user: dict = Depends(current_user)):
+    added = _proxy_mgr.add_from_list(req.proxies)
+    return {"added": added, "total": _proxy_mgr.stats()["total"]}
+
+@app.post("/api/proxy/cleanup",          tags=["Proxy"])
+async def proxy_cleanup(user: dict = Depends(current_user)):
+    removed = _proxy_mgr.remove_bad_proxies()
+    return {"removed": removed, "remaining": _proxy_mgr.stats()["total"]}
+
+# ── SaaS / Subscriptions ──────────────────────────────────────────────────────
+
+class UpgradeRequest(BaseModel):
+    tier:        str = Field(..., pattern="^(free|pro|agency)$")
+    success_url: str = Field(default="http://localhost:8080/index.html?upgraded=1")
+    cancel_url:  str = Field(default="http://localhost:8080/index.html")
+
+@app.get("/api/saas/tiers",              tags=["SaaS"])
+async def saas_tiers():
+    return {"tiers": TIERS}
+
+@app.get("/api/saas/subscription",       tags=["SaaS"])
+async def saas_subscription(user: dict = Depends(current_user)):
+    return _saas_mgr.get_subscription(user["username"])
+
+@app.post("/api/saas/upgrade",           tags=["SaaS"])
+async def saas_upgrade(req: UpgradeRequest, user: dict = Depends(current_user)):
+    if req.tier == "free":
+        result = _saas_mgr.set_tier(user["username"], "free")
+        return {"message": "Downgraded to Free tier", "subscription": result}
+    result = _saas_mgr.create_stripe_checkout(user["username"], req.tier, req.success_url, req.cancel_url)
+    return result
+
+@app.post("/api/saas/admin/set-tier",    tags=["SaaS"])
+async def saas_admin_set_tier(username: str, tier: str, days: int = 30, admin: dict = Depends(admin_user)):
+    result = _saas_mgr.set_tier(username, tier, days)
+    _webhook_mgr.notify("Tier Changed", f"User {username} upgraded to {tier}", "success")
+    return result

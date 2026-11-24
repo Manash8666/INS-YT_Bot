@@ -51,6 +51,24 @@
       <a class="nav-item" data-page="scheduler" href="#">
         <i class="fas fa-calendar"></i><span>Scheduler</span>
       </a>
+      <a class="nav-item" data-page="ai-generator" href="#">
+        <i class="fas fa-brain"></i><span>🤖 AI Creator</span>
+      </a>
+      <a class="nav-item" data-page="analytics" href="#">
+        <i class="fas fa-chart-line"></i><span>📊 Analytics</span>
+      </a>
+      <a class="nav-item" data-page="accounts-mgr" href="#">
+        <i class="fas fa-users-cog"></i><span>👥 Accounts</span>
+      </a>
+      <a class="nav-item" data-page="webhooks-page" href="#">
+        <i class="fas fa-bell"></i><span>🔔 Webhooks</span>
+      </a>
+      <a class="nav-item" data-page="proxy-page" href="#">
+        <i class="fas fa-shield-alt"></i><span>🛡️ Proxy</span>
+      </a>
+      <a class="nav-item" data-page="saas-page" href="#">
+        <i class="fas fa-crown"></i><span>💎 Plans</span>
+      </a>
       <a class="nav-item" data-page="settings" href="#">
         <i class="fas fa-cog"></i><span>Settings</span>
       </a>
@@ -1173,7 +1191,7 @@
   </div>
 </div>
 
-<script src="js/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><script src="js/main.js"></script>
 
 
       <!-- Optional: Engage with subscribers content -->
@@ -1504,8 +1522,324 @@
       </details>
 
     </div>
+
+    <!-- ── AI Content Generator ─────────────────────────────────────────────── -->
+    <div id="ai-generator" class="page">
+      <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:16px;padding:28px;margin-bottom:24px;color:white">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">🤖 AI Content Creator</h2>
+        <p style="opacity:.85;font-size:14px">Generate SEO-optimised titles, descriptions, captions, hashtags, scripts and content ideas with AI.</p>
+        <span id="ai-mode-badge" style="display:inline-block;margin-top:10px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,.25)">SIM</span>
+      </div>
+
+      <div class="engagement-tabs tab-group" style="margin-bottom:0">
+        <button class="tab-btn active" data-tab="ai-yt-tab">YouTube</button>
+        <button class="tab-btn" data-tab="ai-ig-tab">Instagram</button>
+        <button class="tab-btn" data-tab="ai-ideas-tab">Content Ideas</button>
+      </div>
+
+      <div class="engagement-content">
+        <!-- YouTube AI -->
+        <div id="ai-yt-tab" class="tab-content active">
+          <div style="display:grid;gap:16px">
+            <div style="background:#f8fafc;border-radius:10px;padding:16px">
+              <h4 style="margin-bottom:10px;font-size:14px;font-weight:600">Video Titles</h4>
+              <div style="display:flex;gap:8px;margin-bottom:10px">
+                <input id="ai-yt-topic" type="text" placeholder="Topic: e.g. fitness for beginners" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+                <select id="ai-yt-style" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+                  <option value="engaging">Engaging</option><option value="how-to">How-To</option><option value="listicle">Listicle</option><option value="informative">Informative</option>
+                </select>
+                <button class="btn btn-primary" style="white-space:nowrap" onclick="aiGenerate('yt-titles')"><i class="fas fa-magic"></i> Generate</button>
+              </div>
+              <div id="ai-yt-titles-result" style="display:none"></div>
+            </div>
+            <div style="background:#f8fafc;border-radius:10px;padding:16px">
+              <h4 style="margin-bottom:10px;font-size:14px;font-weight:600">Description + Tags + Script</h4>
+              <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+                <input id="ai-yt-title-input" type="text" placeholder="Video title" style="flex:2;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+                <input id="ai-yt-script-topic" type="text" placeholder="Script topic" style="flex:2;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+                <input id="ai-yt-duration" type="number" value="5" min="1" max="30" style="width:80px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="aiGenerate('yt-desc')"><i class="fas fa-align-left"></i> Description</button>
+                <button class="btn btn-secondary" onclick="aiGenerate('yt-tags')"><i class="fas fa-tags"></i> Tags</button>
+                <button class="btn btn-secondary" onclick="aiGenerate('yt-script')"><i class="fas fa-scroll"></i> Script</button>
+              </div>
+              <div id="ai-yt-desc-result"   style="display:none;margin-top:10px"></div>
+              <div id="ai-yt-tags-result"   style="display:none;margin-top:10px"></div>
+              <div id="ai-yt-script-result" style="display:none;margin-top:10px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Instagram AI -->
+        <div id="ai-ig-tab" class="tab-content">
+          <div style="display:grid;gap:16px">
+            <div style="background:#f8fafc;border-radius:10px;padding:16px">
+              <h4 style="margin-bottom:10px;font-size:14px;font-weight:600">Caption Generator</h4>
+              <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+                <input id="ai-ig-caption-topic" type="text" placeholder="Topic or describe your post" style="flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+                <select id="ai-ig-tone" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+                  <option>engaging</option><option>funny</option><option>motivational</option><option>educational</option><option>promotional</option>
+                </select>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="ai-ig-hashtags" checked> Include hashtags</label>
+              </div>
+              <button class="btn btn-primary" onclick="aiGenerate('ig-caption')"><i class="fas fa-magic"></i> Generate Caption</button>
+              <div id="ai-ig-caption-result" style="display:none;margin-top:10px"></div>
+            </div>
+            <div style="background:#f8fafc;border-radius:10px;padding:16px">
+              <h4 style="margin-bottom:10px;font-size:14px;font-weight:600">Hashtags + Bio</h4>
+              <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+                <input id="ai-ig-niche" type="text" placeholder="Your niche (e.g. fitness, travel, food)" style="flex:1;min-width:180px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+                <input id="ai-ig-name" type="text" placeholder="Account name (optional)" style="flex:1;min-width:140px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="aiGenerate('ig-hashtags')"><i class="fas fa-hashtag"></i> Hashtags</button>
+                <button class="btn btn-secondary" onclick="aiGenerate('ig-bio')"><i class="fas fa-user-edit"></i> Bio</button>
+              </div>
+              <div id="ai-ig-hashtags-result" style="display:none;margin-top:10px"></div>
+              <div id="ai-ig-bio-result"      style="display:none;margin-top:10px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content Ideas -->
+        <div id="ai-ideas-tab" class="tab-content">
+          <div style="background:#f8fafc;border-radius:10px;padding:16px">
+            <h4 style="margin-bottom:10px;font-size:14px;font-weight:600">Content Ideas for Your Niche</h4>
+            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+              <input id="ai-ideas-niche" type="text" placeholder="Your niche (e.g. cooking, finance, gaming)" style="flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+              <select id="ai-ideas-platform" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+                <option value="both">Both platforms</option><option value="YouTube">YouTube only</option><option value="Instagram">Instagram only</option>
+              </select>
+              <input id="ai-ideas-count" type="number" value="10" min="3" max="20" style="width:70px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+              <button class="btn btn-primary" onclick="aiGenerate('ideas')"><i class="fas fa-lightbulb"></i> Generate Ideas</button>
+            </div>
+            <div id="ai-ideas-result" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Analytics Dashboard ───────────────────────────────────────────────── -->
+    <div id="analytics" class="page">
+      <div style="background:linear-gradient(135deg,#0ea5e9,#6366f1);border-radius:16px;padding:28px;margin-bottom:24px;color:white">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">📊 Analytics Dashboard</h2>
+        <p style="opacity:.85;font-size:14px">Track follower growth, watch time progress, engagement rates, and platform metrics over time.</p>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="stats-grid" style="margin-bottom:24px">
+        <div class="stat-card"><div class="stat-icon instagram"><i class="fab fa-instagram"></i></div><div class="stat-content"><span class="stat-label">IG Followers</span><span class="stat-value" id="an-ig-followers">—</span></div></div>
+        <div class="stat-card"><div class="stat-icon instagram"><i class="fas fa-heart"></i></div><div class="stat-content"><span class="stat-label">IG Likes</span><span class="stat-value" id="an-ig-likes">—</span></div></div>
+        <div class="stat-card"><div class="stat-icon youtube"><i class="fab fa-youtube"></i></div><div class="stat-content"><span class="stat-label">YT Subscribers</span><span class="stat-value" id="an-yt-subs">—</span></div></div>
+        <div class="stat-card"><div class="stat-icon youtube"><i class="fas fa-eye"></i></div><div class="stat-content"><span class="stat-label">YT Total Views</span><span class="stat-value" id="an-yt-views">—</span></div></div>
+      </div>
+
+      <!-- Charts -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="font-size:15px;font-weight:600">Instagram Followers</h3>
+            <select id="an-ig-metric" onchange="loadAnalyticsChart()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px">
+              <option value="followers">Followers</option><option value="likes">Likes</option><option value="posts">Posts</option>
+            </select>
+          </div>
+          <canvas id="chart-ig" height="200"></canvas>
+        </div>
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="font-size:15px;font-weight:600">YouTube Growth</h3>
+            <select id="an-yt-metric" onchange="loadAnalyticsChart()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px">
+              <option value="subscribers">Subscribers</option><option value="total_views">Total Views</option><option value="watch_hours">Watch Hours</option>
+            </select>
+          </div>
+          <canvas id="chart-yt" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- Snapshot button -->
+      <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <strong style="font-size:14px">Record Live Snapshot</strong>
+          <p style="font-size:12px;color:var(--gray);margin-top:2px">Pull current stats from Instagram/YouTube APIs and save to history</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="font-size:13px" onclick="recordSnapshot('instagram')"><i class="fab fa-instagram"></i> IG Snapshot</button>
+          <button class="btn btn-primary" style="font-size:13px" onclick="recordSnapshot('youtube')"><i class="fab fa-youtube"></i> YT Snapshot</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Multi-Account Manager ─────────────────────────────────────────────── -->
+    <div id="accounts-mgr" class="page">
+      <div style="background:linear-gradient(135deg,#059669,#0d9488);border-radius:16px;padding:28px;margin-bottom:24px;color:white">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">👥 Multi-Account Manager</h2>
+        <p style="opacity:.85;font-size:14px">Manage multiple Instagram and YouTube accounts from one dashboard.</p>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary"   onclick="showAddAccountModal('instagram')"><i class="fab fa-instagram"></i> Add Instagram</button>
+          <button class="btn btn-secondary" onclick="showAddAccountModal('youtube')"><i class="fab fa-youtube"></i> Add YouTube</button>
+        </div>
+        <div id="accounts-stats" style="font-size:13px;color:var(--gray)">Loading...</div>
+      </div>
+
+      <div id="accounts-list" style="display:grid;gap:12px">
+        <div style="text-align:center;padding:40px;color:var(--gray)"><i class="fas fa-spinner fa-spin"></i> Loading accounts...</div>
+      </div>
+    </div>
+
+    <!-- Add Account Modal -->
+    <div id="addAccountModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header"><h3><i class="fas fa-user-plus"></i> Add Account</h3><button class="close-modal">&times;</button></div>
+        <div class="modal-body">
+          <input type="hidden" id="add-acc-platform" value="instagram">
+          <div class="form-group"><label>Display Name</label><input id="add-acc-name" type="text" placeholder="My Instagram Account"></div>
+          <div class="form-group"><label>Username</label><input id="add-acc-username" type="text" placeholder="@handle"></div>
+          <div class="form-group"><label>User ID <small>(numeric)</small></label><input id="add-acc-uid" type="text" placeholder="17841400..."></div>
+          <div class="form-group"><label>Tags <small>(comma-separated)</small></label><input id="add-acc-tags" type="text" placeholder="personal, main, backup"></div>
+          <div class="form-group"><label>Notes</label><input id="add-acc-notes" type="text" placeholder="Optional notes"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary"   onclick="saveAccount()"><i class="fas fa-save"></i> Add Account</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Webhooks ───────────────────────────────────────────────────────────── -->
+    <div id="webhooks-page" class="page">
+      <div style="background:linear-gradient(135deg,#dc2626,#9333ea);border-radius:16px;padding:28px;margin-bottom:24px;color:white">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">🔔 Webhook Notifications</h2>
+        <p style="opacity:.85;font-size:14px">Get real-time alerts on Discord, Telegram, Slack, or email when jobs complete, milestones are hit, or errors occur.</p>
+        <span id="webhook-status-badge" style="display:inline-block;margin-top:10px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,.25)">0 Channels</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:20px">
+        <!-- Discord -->
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+          <h3 style="font-size:15px;font-weight:600;margin-bottom:12px"><span style="color:#5865F2">●</span> Discord</h3>
+          <div class="form-group"><label>Webhook URL</label><input id="wh-discord" type="url" placeholder="https://discord.com/api/webhooks/..."></div>
+          <small style="color:var(--gray)">Server Settings → Integrations → Webhooks → New Webhook</small>
+        </div>
+        <!-- Telegram -->
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+          <h3 style="font-size:15px;font-weight:600;margin-bottom:12px"><span style="color:#0088cc">●</span> Telegram</h3>
+          <div class="form-group"><label>Bot Token</label><input id="wh-telegram-token" type="text" placeholder="1234567:AAHxxxx..."></div>
+          <div class="form-group"><label>Chat ID</label><input id="wh-telegram-chat" type="text" placeholder="-100xxxxxxx"></div>
+          <small style="color:var(--gray)">Create bot via @BotFather, get Chat ID via @userinfobot</small>
+        </div>
+        <!-- Slack -->
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+          <h3 style="font-size:15px;font-weight:600;margin-bottom:12px"><span style="color:#4A154B">●</span> Slack</h3>
+          <div class="form-group"><label>Incoming Webhook URL</label><input id="wh-slack" type="url" placeholder="https://hooks.slack.com/services/..."></div>
+          <small style="color:var(--gray)">Slack App → Incoming Webhooks → Add New Webhook</small>
+        </div>
+        <!-- Email -->
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+          <h3 style="font-size:15px;font-weight:600;margin-bottom:12px"><span style="color:#ef4444">●</span> Email (SMTP)</h3>
+          <div class="form-group"><label>SMTP Host</label><input id="wh-smtp-host" type="text" placeholder="smtp.gmail.com"></div>
+          <div class="form-group"><label>Username</label><input id="wh-smtp-user" type="email" placeholder="you@gmail.com"></div>
+          <div class="form-group"><label>Password / App Password</label><input id="wh-smtp-pass" type="password" placeholder="••••••••"></div>
+          <div class="form-group"><label>Send To</label><input id="wh-smtp-to" type="email" placeholder="alerts@example.com"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px">
+        <button class="btn btn-primary" onclick="saveWebhooks()"><i class="fas fa-save"></i> Save Configuration</button>
+        <button class="btn btn-secondary" onclick="testWebhooks()"><i class="fas fa-paper-plane"></i> Test All Channels</button>
+      </div>
+      <div id="webhook-test-result" style="margin-top:14px;display:none"></div>
+    </div>
+
+    <!-- ── Proxy Manager ─────────────────────────────────────────────────────── -->
+    <div id="proxy-page" class="page">
+      <div style="background:linear-gradient(135deg,#374151,#1f2937);border-radius:16px;padding:28px;margin-bottom:24px;color:white">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">🛡️ Proxy Manager</h2>
+        <p style="opacity:.85;font-size:14px">Route requests through residential or datacenter proxies to reduce ban risk and increase safe rate limits.</p>
+        <span id="proxy-badge" style="display:inline-block;margin-top:10px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,.25)">0 Proxies</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+          <h3 style="font-size:15px;font-weight:600;margin-bottom:12px">Add Proxies</h3>
+          <p style="font-size:13px;color:var(--gray);margin-bottom:10px">One per line. Format: <code>host:port</code> or <code>user:pass@host:port</code></p>
+          <textarea id="proxy-input" rows="8" placeholder="1.2.3.4:8080&#10;user:pass@5.6.7.8:3128&#10;proxy.example.com:1080" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:monospace;font-size:13px"></textarea>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <select id="proxy-type" style="padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+              <option value="http">HTTP</option><option value="socks5">SOCKS5</option>
+            </select>
+            <button class="btn btn-primary" onclick="addProxies()"><i class="fas fa-plus"></i> Add Proxies</button>
+          </div>
+        </div>
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+          <h3 style="font-size:15px;font-weight:600;margin-bottom:12px">Proxy Pool Stats</h3>
+          <div class="rumble-stats" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+            <div class="stat-item"><span class="stat-label">Total</span><span class="stat-value" id="proxy-total">0</span></div>
+            <div class="stat-item"><span class="stat-label">Available</span><span class="stat-value" id="proxy-avail">0</span></div>
+            <div class="stat-item"><span class="stat-label">Banned</span><span class="stat-value" id="proxy-banned">0</span></div>
+            <div class="stat-item"><span class="stat-label">Status</span><span class="stat-value" id="proxy-status" style="font-size:12px">None</span></div>
+          </div>
+          <button class="btn btn-secondary" onclick="cleanupProxies()"><i class="fas fa-broom"></i> Remove Bad Proxies</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SaaS / Plans ───────────────────────────────────────────────────────── -->
+    <div id="saas-page" class="page">
+      <div style="background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:16px;padding:28px;margin-bottom:24px;color:white">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">💎 Subscription Plans</h2>
+        <p style="opacity:.85;font-size:14px">Upgrade to unlock more accounts, higher follow limits, AI requests, and advanced features.</p>
+      </div>
+
+      <!-- Current plan -->
+      <div id="current-plan-card" style="background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:4px">Your Current Plan</h3>
+        <div id="current-plan-detail" style="font-size:14px;color:var(--gray)">Loading...</div>
+      </div>
+
+      <!-- Pricing cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
+
+        <div style="background:white;border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.08);border:2px solid var(--border)">
+          <div style="font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Free</div>
+          <div style="font-size:36px;font-weight:700;margin-bottom:4px"></body></div>
+          <div style="font-size:13px;color:var(--gray);margin-bottom:20px">Forever free</div>
+          <ul style="list-style:none;font-size:14px;display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
+            <li>✅ 1 account per platform</li><li>✅ 50 follows/day</li><li>✅ 10 AI requests/month</li><li>✅ 7 days analytics</li><li>❌ Webhooks</li><li>❌ Proxy support</li>
+          </ul>
+          <button class="btn btn-secondary" style="width:100%" onclick="subscribeTier('free')">Current / Downgrade</button>
+        </div>
+
+        <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:16px;padding:24px;color:white;position:relative">
+          <div style="position:absolute;top:-10px;right:16px;background:#fbbf24;color:#1e293b;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">POPULAR</div>
+          <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;opacity:.85">Pro</div>
+          <div style="font-size:36px;font-weight:700;margin-bottom:4px">$29<span style="font-size:14px;font-weight:400">/mo</span></div>
+          <div style="font-size:13px;opacity:.7;margin-bottom:20px">Billed monthly</div>
+          <ul style="list-style:none;font-size:14px;display:flex;flex-direction:column;gap:8px;margin-bottom:24px;opacity:.9">
+            <li>✅ 3 accounts per platform</li><li>✅ 150 follows/day</li><li>✅ 100 AI requests/month</li><li>✅ 30 days analytics</li><li>✅ Webhooks</li><li>✅ Proxy support</li>
+          </ul>
+          <button style="width:100%;padding:12px;border:2px solid white;border-radius:8px;background:transparent;color:white;font-weight:600;font-size:14px;cursor:pointer" onclick="subscribeTier('pro')">Upgrade to Pro</button>
+        </div>
+
+        <div style="background:white;border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.08);border:2px solid var(--border)">
+          <div style="font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Agency</div>
+          <div style="font-size:36px;font-weight:700;margin-bottom:4px">$99<span style="font-size:14px;font-weight:400">/mo</span></div>
+          <div style="font-size:13px;color:var(--gray);margin-bottom:20px">Billed monthly</div>
+          <ul style="list-style:none;font-size:14px;display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
+            <li>✅ 10 accounts per platform</li><li>✅ 500 follows/day</li><li>✅ 500 AI requests/month</li><li>✅ 90 days analytics</li><li>✅ Webhooks</li><li>✅ Proxy support</li>
+          </ul>
+          <button class="btn btn-primary" style="width:100%" onclick="subscribeTier('agency')">Upgrade to Agency</button>
+        </div>
+      </div>
+    </div>
 </body>
 </html>
+
+
+
 
 
 

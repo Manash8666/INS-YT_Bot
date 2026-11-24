@@ -1644,3 +1644,286 @@ window.fetch = function(url, opts = {}) {
 document.addEventListener("DOMContentLoaded", function() {
     checkAuthGuard();
 });
+
+
+// ════════════════════════════════════════════════════════════════════════════
+//  AI CONTENT GENERATOR
+// ════════════════════════════════════════════════════════════════════════════
+
+async function checkAIStatus() {
+    try {
+        const d = await (await authFetch(`${API}/api/ai/status`)).json();
+        const badge = document.getElementById("ai-mode-badge");
+        if (badge) { badge.textContent = d.mode === "live" ? "LIVE (GPT)" : "SIM (templates)"; badge.style.background = d.mode === "live" ? "rgba(16,185,129,.5)" : "rgba(255,255,255,.25)"; }
+    } catch {}
+}
+
+function aiResultBox(data, type) {
+    const mode = data.mode === "live" ? "🤖 AI" : "📝 Template";
+    let content = "";
+    if (type === "titles" && data.titles) {
+        content = data.titles.map((t,i) => `<div style="padding:10px;background:white;border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:10px"><span style="color:var(--gray);font-size:12px">${i+1}.</span><span style="font-size:14px">${escapeHtml(t)}</span><button onclick="navigator.clipboard.writeText('${t.replace(/'/g,"\\'")}');showToast('Copied!','success')" style="margin-left:auto;border:none;background:none;cursor:pointer;color:var(--gray)"><i class="fas fa-copy"></i></button></div>`).join("");
+    } else if (type === "tags" && data.tags) {
+        content = `<div style="display:flex;flex-wrap:wrap;gap:6px">${data.tags.map(t=>`<span style="background:#eff6ff;color:var(--primary);padding:4px 10px;border-radius:20px;font-size:13px">${escapeHtml(t)}</span>`).join("")}</div>`;
+    } else if (type === "hashtags" && data.hashtags) {
+        content = `<div style="display:flex;flex-wrap:wrap;gap:6px">${data.hashtags.map(h=>`<span style="background:#fdf2f8;color:#9333ea;padding:4px 10px;border-radius:20px;font-size:13px">${escapeHtml(h)}</span>`).join("")}</div>`;
+    } else if (type === "ideas" && data.ideas) {
+        content = data.ideas.map(idea=>`<div style="background:white;border-radius:8px;padding:12px;margin-bottom:8px;border-left:3px solid var(--primary)"><strong style="font-size:14px">${escapeHtml(idea.title||"")}</strong><div style="font-size:12px;color:var(--gray);margin-top:4px">${escapeHtml(idea.format||"")} · ${escapeHtml(idea.engagement||"")}</div>${idea.hook?`<div style="font-size:13px;color:var(--dark);margin-top:4px;font-style:italic">"${escapeHtml(idea.hook)}"</div>`:""}</div>`).join("");
+    } else {
+        const text = data.description || data.caption || data.script || data.bio || JSON.stringify(data,null,2);
+        content = `<pre style="white-space:pre-wrap;font-size:13px;font-family:inherit;background:white;padding:12px;border-radius:8px;max-height:300px;overflow-y:auto">${escapeHtml(text)}</pre><button onclick="navigator.clipboard.writeText(${JSON.stringify(text)});showToast('Copied!','success')" class="btn btn-secondary" style="margin-top:8px;font-size:12px"><i class="fas fa-copy"></i> Copy</button>`;
+    }
+    return `<div style="background:#f8fafc;border-radius:10px;padding:14px"><div style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:10px">${mode}</div>${content}</div>`;
+}
+
+async function aiGenerate(type) {
+    const btn = event.target.closest("button");
+    if (btn) { btn.disabled=true; const orig=btn.innerHTML; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>'; btn._orig=orig; }
+    try {
+        let url, body, resultId;
+        if (type==="yt-titles")  { url="/api/ai/youtube/title"; body={topic:document.getElementById("ai-yt-topic")?.value||"",style:document.getElementById("ai-yt-style")?.value||"engaging"}; resultId="ai-yt-titles-result"; }
+        else if (type==="yt-desc")    { url="/api/ai/youtube/description"; body={title:document.getElementById("ai-yt-title-input")?.value||"",keywords:[]}; resultId="ai-yt-desc-result"; }
+        else if (type==="yt-tags")    { url="/api/ai/youtube/tags"; body={niche:document.getElementById("ai-yt-title-input")?.value||"",count:20}; resultId="ai-yt-tags-result"; }
+        else if (type==="yt-script")  { url="/api/ai/youtube/script"; body={topic:document.getElementById("ai-yt-script-topic")?.value||"",duration_minutes:parseInt(document.getElementById("ai-yt-duration")?.value||"5")}; resultId="ai-yt-script-result"; }
+        else if (type==="ig-caption") { url="/api/ai/instagram/caption"; body={topic:document.getElementById("ai-ig-caption-topic")?.value||"",tone:document.getElementById("ai-ig-tone")?.value||"engaging",include_hashtags:document.getElementById("ai-ig-hashtags")?.checked??true}; resultId="ai-ig-caption-result"; }
+        else if (type==="ig-hashtags"){ url="/api/ai/instagram/hashtags"; body={niche:document.getElementById("ai-ig-niche")?.value||"",count:30}; resultId="ai-ig-hashtags-result"; }
+        else if (type==="ig-bio")     { url="/api/ai/instagram/bio"; body={niche:document.getElementById("ai-ig-niche")?.value||"",name:document.getElementById("ai-ig-name")?.value||""}; resultId="ai-ig-bio-result"; }
+        else if (type==="ideas")      { url="/api/ai/content-ideas"; body={niche:document.getElementById("ai-ideas-niche")?.value||"",platform:document.getElementById("ai-ideas-platform")?.value||"both",count:parseInt(document.getElementById("ai-ideas-count")?.value||"10")}; resultId="ai-ideas-result"; }
+        const data = await post(url, body);
+        const el = document.getElementById(resultId);
+        if (el) { el.style.display="block"; el.innerHTML=aiResultBox(data, type.split("-").pop()); }
+        showToast("Content generated!", "success");
+    } catch(e) { showToast("Failed: "+e.message, "error"); }
+    finally { if(btn){btn.disabled=false;btn.innerHTML=btn._orig||btn.innerHTML;} }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+//  ANALYTICS CHARTS
+// ════════════════════════════════════════════════════════════════════════════
+
+let _chartIG = null, _chartYT = null;
+
+function createChart(canvasId, label, series, color) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return null;
+    const ctx = canvas.getContext("2d");
+    const labels = series.map(p => p.date.substring(5,10));
+    const values = series.map(p => p.value);
+    return new Chart(ctx, {
+        type: "line",
+        data: { labels, datasets: [{ label, data: values, borderColor: color, backgroundColor: color+"22", tension: 0.4, fill: true, pointRadius: 3, pointHoverRadius: 5 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, grid: { color: "#f1f5f9" } }, x: { grid: { display: false } } } }
+    });
+}
+
+async function loadAnalyticsChart() {
+    try {
+        const igMetric = document.getElementById("an-ig-metric")?.value || "followers";
+        const ytMetric = document.getElementById("an-yt-metric")?.value || "subscribers";
+        const igSeries = await (await authFetch(`${API}/api/analytics/series?platform=instagram&account_id=demo&metric=${igMetric}&days=30`)).json();
+        const ytSeries = await (await authFetch(`${API}/api/analytics/series?platform=youtube&account_id=demo&metric=${ytMetric}&days=30`)).json();
+        if (_chartIG) { _chartIG.destroy(); }
+        if (_chartYT) { _chartYT.destroy(); }
+        _chartIG = createChart("chart-ig", igMetric, igSeries.series || [], "#e1306c");
+        _chartYT = createChart("chart-yt", ytMetric, ytSeries.series || [], "#ff0000");
+    } catch(e) { console.warn("chart load error:", e); }
+}
+
+async function loadAnalyticsSummary() {
+    try {
+        const d = await (await authFetch(`${API}/api/analytics/overview`)).json();
+        const ig = d.instagram || {};
+        const yt = d.youtube || {};
+        setText("an-ig-followers", fmtNum(ig.followers?.latest ?? 0));
+        setText("an-ig-likes",     fmtNum(ig.likes?.latest    ?? 0));
+        setText("an-yt-subs",      fmtNum(yt.subscribers?.latest   ?? 0));
+        setText("an-yt-views",     fmtNum(yt.total_views?.latest    ?? 0));
+    } catch {}
+}
+
+async function recordSnapshot(platform) {
+    try {
+        const d = await post(`/api/analytics/snapshot?platform=${platform}`, {});
+        showToast(`${platform} snapshot recorded!`, "success");
+        await loadAnalyticsChart();
+        await loadAnalyticsSummary();
+    } catch(e) { showToast("Snapshot failed: "+e.message, "error"); }
+}
+
+document.querySelectorAll(".nav-item").forEach(item => {
+    item.addEventListener("click", () => {
+        const pg = item.getAttribute("data-page");
+        if (pg === "analytics")    { setTimeout(() => { loadAnalyticsSummary(); loadAnalyticsChart(); }, 300); }
+        if (pg === "accounts-mgr") setTimeout(loadAccountsList, 300);
+        if (pg === "webhooks-page") setTimeout(loadWebhookStatus, 300);
+        if (pg === "proxy-page")   setTimeout(loadProxyStats, 300);
+        if (pg === "saas-page")    setTimeout(loadSubscription, 300);
+        if (pg === "ai-generator") setTimeout(checkAIStatus, 300);
+    });
+});
+
+
+// ════════════════════════════════════════════════════════════════════════════
+//  MULTI-ACCOUNT MANAGER
+// ════════════════════════════════════════════════════════════════════════════
+
+async function loadAccountsList() {
+    try {
+        const d = await (await authFetch(`${API}/api/accounts`)).json();
+        const listEl = document.getElementById("accounts-list");
+        const statsEl = document.getElementById("accounts-stats");
+        if (statsEl) statsEl.textContent = `${d.stats?.total||0} accounts  |  IG: ${d.stats?.by_platform?.instagram||0}  YT: ${d.stats?.by_platform?.youtube||0}`;
+        if (!listEl) return;
+        if (!d.accounts?.length) { listEl.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray)"><i class="fas fa-users" style="font-size:32px;margin-bottom:12px"></i><br>No accounts yet. Add your first account above.</div>`; return; }
+        listEl.innerHTML = d.accounts.map(acc => `
+            <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;align-items:center;gap:14px">
+                <div style="width:44px;height:44px;border-radius:12px;background:${acc.platform==='instagram'?'#fdf2f8':'#fff0f0'};display:flex;align-items:center;justify-content:center;font-size:20px">
+                    <i class="fab fa-${acc.platform}" style="color:${acc.platform==='instagram'?'#e1306c':'#ff0000'}"></i>
+                </div>
+                <div style="flex:1">
+                    <div style="font-weight:600;font-size:15px">${escapeHtml(acc.display_name)} ${acc.is_default?'<span style="font-size:11px;background:#eff6ff;color:var(--primary);padding:2px 8px;border-radius:10px;margin-left:4px">Default</span>':""}</div>
+                    <div style="font-size:13px;color:var(--gray)">${acc.username?'@'+acc.username+' · ':''} ${acc.platform} · Added ${acc.created_at.substring(0,10)}</div>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px" onclick="setDefaultAccount('${acc.id}','${acc.platform}')"><i class="fas fa-star"></i></button>
+                    <button class="btn btn-danger"    style="font-size:12px;padding:6px 12px" onclick="deleteAccount('${acc.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>`).join("");
+    } catch(e) { console.warn("accounts load error:", e); }
+}
+
+function showAddAccountModal(platform) {
+    document.getElementById("add-acc-platform").value = platform;
+    document.getElementById("addAccountModal").style.display = "flex";
+}
+
+async function saveAccount() {
+    const platform = document.getElementById("add-acc-platform").value;
+    const name     = document.getElementById("add-acc-name")?.value?.trim();
+    if (!name) { showToast("Please enter a display name", "warning"); return; }
+    try {
+        await post("/api/accounts", { platform, display_name: name, username: document.getElementById("add-acc-username")?.value?.trim()||"", user_id: document.getElementById("add-acc-uid")?.value?.trim()||"", tags: document.getElementById("add-acc-tags")?.value?.trim()||"", notes: document.getElementById("add-acc-notes")?.value?.trim()||"" });
+        closeModal();
+        showToast(`${platform} account added!`, "success");
+        await loadAccountsList();
+    } catch(e) { showToast("Failed: "+e.message, "error"); }
+}
+
+async function setDefaultAccount(id, platform) {
+    try {
+        const res = await (await authFetch(`${API}/api/accounts/${id}/set-default?platform=${platform}`, {method:"POST"})).json();
+        showToast("Default account updated", "success");
+        await loadAccountsList();
+    } catch(e) { showToast("Failed: "+e.message,"error"); }
+}
+
+async function deleteAccount(id) {
+    if (!confirm("Delete this account?")) return;
+    try {
+        await (await authFetch(`${API}/api/accounts/${id}`, {method:"DELETE"})).json();
+        showToast("Account removed", "info");
+        await loadAccountsList();
+    } catch(e) { showToast("Failed: "+e.message,"error"); }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+//  WEBHOOKS
+// ════════════════════════════════════════════════════════════════════════════
+
+async function loadWebhookStatus() {
+    try {
+        const d = await (await authFetch(`${API}/api/webhooks/status`)).json();
+        const badge = document.getElementById("webhook-status-badge");
+        if (badge) { badge.textContent = `${d.configured_channels?.length||0} Channel${d.configured_channels?.length===1?"":"s"}`; badge.style.background = d.active ? "rgba(16,185,129,.5)" : "rgba(255,255,255,.25)"; }
+    } catch {}
+}
+
+async function saveWebhooks() {
+    const body = { discord_url: document.getElementById("wh-discord")?.value?.trim()||"", telegram_token: document.getElementById("wh-telegram-token")?.value?.trim()||"", telegram_chat_id: document.getElementById("wh-telegram-chat")?.value?.trim()||"", slack_url: document.getElementById("wh-slack")?.value?.trim()||"", smtp_host: document.getElementById("wh-smtp-host")?.value?.trim()||"", smtp_user: document.getElementById("wh-smtp-user")?.value?.trim()||"", smtp_pass: document.getElementById("wh-smtp-pass")?.value?.trim()||"", smtp_to: document.getElementById("wh-smtp-to")?.value?.trim()||"" };
+    try {
+        const d = await post("/api/webhooks/configure", body);
+        showToast(`Saved! Active channels: ${d.channels?.join(", ")||"none"}`, "success");
+        await loadWebhookStatus();
+    } catch(e) { showToast("Save failed: "+e.message, "error"); }
+}
+
+async function testWebhooks() {
+    const el = document.getElementById("webhook-test-result");
+    try {
+        const d = await post("/api/webhooks/test", {});
+        if (el) { el.style.display="block"; el.innerHTML=`<div style="background:${d.sent?.length?"#d1fae5":"#fef3c7"};padding:12px;border-radius:8px;font-size:13px"><strong>${d.sent?.length?"✅ Test sent":"⚠️ No channels configured"}</strong><br>Sent: ${d.sent?.join(", ")||"none"}  |  Failed: ${d.failed?.length||0}</div>`; }
+        showToast(d.sent?.length ? "Test notification sent!" : "No channels configured yet", d.sent?.length?"success":"warning");
+    } catch(e) { showToast("Test failed: "+e.message, "error"); }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+//  PROXY MANAGER
+// ════════════════════════════════════════════════════════════════════════════
+
+async function loadProxyStats() {
+    try {
+        const d = await (await authFetch(`${API}/api/proxy/stats`)).json();
+        setText("proxy-total",  d.total||0);
+        setText("proxy-avail",  d.available||0);
+        setText("proxy-banned", d.banned||0);
+        setText("proxy-status", d.configured ? "Active" : "No proxies");
+        const badge = document.getElementById("proxy-badge");
+        if (badge) { badge.textContent = `${d.total||0} Proxies`; badge.style.background = d.total>0 ? "rgba(16,185,129,.5)" : "rgba(255,255,255,.25)"; }
+    } catch {}
+}
+
+async function addProxies() {
+    const raw   = document.getElementById("proxy-input")?.value?.trim();
+    const ptype = document.getElementById("proxy-type")?.value||"http";
+    if (!raw) { showToast("Please enter at least one proxy", "warning"); return; }
+    const lines = raw.split("\n").map(l=>l.trim()).filter(Boolean);
+    try {
+        const d = await post("/api/proxy/add", {proxies: lines, proxy_type: ptype});
+        showToast(`Added ${d.added} proxies (total: ${d.total})`, "success");
+        document.getElementById("proxy-input").value = "";
+        await loadProxyStats();
+    } catch(e) { showToast("Failed: "+e.message, "error"); }
+}
+
+async function cleanupProxies() {
+    try {
+        const d = await post("/api/proxy/cleanup", {});
+        showToast(`Removed ${d.removed} bad proxies, ${d.remaining} remaining`, "info");
+        await loadProxyStats();
+    } catch(e) { showToast("Failed: "+e.message, "error"); }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+//  SAAS / PLANS
+// ════════════════════════════════════════════════════════════════════════════
+
+async function loadSubscription() {
+    try {
+        const d = await (await authFetch(`${API}/api/saas/subscription`)).json();
+        const el = document.getElementById("current-plan-detail");
+        if (el) {
+            const tierColors = {free:"#94a3b8", pro:"#6366f1", agency:"#f59e0b"};
+            el.innerHTML = `<span style="font-size:18px;font-weight:700;color:${tierColors[d.tier]||"#64748b"}">${d.tier?.toUpperCase()}</span>  <span style="color:var(--gray)">|</span>  Follows/day: <strong>${d.limits?.follows_per_day}</strong>  |  AI requests: <strong>${d.ai_requests_used||0}/${d.limits?.ai_requests}</strong>  |  Accounts: <strong>${d.limits?.accounts}</strong>  ${d.period_end?`  |  Renews: ${d.period_end.substring(0,10)}`:""}`;
+        }
+    } catch {}
+}
+
+async function subscribeTier(tier) {
+    if (tier === "free") {
+        try { await post("/api/saas/upgrade", {tier:"free"}); showToast("Downgraded to Free", "info"); await loadSubscription(); } catch(e) { showToast("Failed: "+e.message, "error"); }
+        return;
+    }
+    try {
+        const d = await post("/api/saas/upgrade", {tier, success_url: window.location.href+"?upgraded=1", cancel_url: window.location.href});
+        if (d.url && d.mode === "live") {
+            window.open(d.url, "_blank");
+            showToast("Opening Stripe payment page...", "info");
+        } else {
+            showToast(d.message || `Configure STRIPE_SECRET_KEY to enable payments. Tier: ${tier}`, "warning");
+        }
+    } catch(e) { showToast("Failed: "+e.message, "error"); }
+}
