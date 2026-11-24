@@ -22,6 +22,15 @@ class Settings(BaseSettings):
     debug: bool = False
     secret_key: str = Field(default="change-me-in-production", min_length=32)
 
+    # ── Auth / session ────────────────────────────────────────────────────────
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 1440    # 24 hours
+    jwt_refresh_token_expire_days:   int = 30       # 30 days
+    # Default admin credentials — CHANGE IN PRODUCTION
+    admin_username: str = "admin"
+    admin_password_hash: str = ""    # bcrypt hash; empty = use default password
+    admin_default_password: str = "BotPlatform@2024"
+
     # ── Database ─────────────────────────────────────────────────────────────
     database_url: str = "sqlite:///./bot.db"
 
@@ -119,3 +128,4 @@ class Settings(BaseSettings):
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()
+

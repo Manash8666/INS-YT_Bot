@@ -1366,3 +1366,222 @@ async def oauth_youtube_callback(code: str = None, state: str = None, error: str
         "youtube",
         "Refresh token saved permanently · YouTube client activated in live mode"
     ))
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  AUTH — Register / Login / Refresh / Logout / Me / Change Password
+# ════════════════════════════════════════════════════════════════════════════
+
+from fastapi import Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from src.youtube_instagram_bot.auth.auth_manager_session import AuthManager
+
+# ── Initialise auth manager once at module level ──────────────────────────────
+_auth_mgr: AuthManager | None = None
+
+def get_auth_manager() -> AuthManager:
+    global _auth_mgr
+    if _auth_mgr is None:
+        s = get_settings()
+        _auth_mgr = AuthManager(
+            database_url=s.database_url,
+            secret_key=s.secret_key,
+            algorithm=s.jwt_algorithm,
+            access_expire_minutes=s.jwt_access_token_expire_minutes,
+            refresh_expire_days=s.jwt_refresh_token_expire_days,
+        )
+        # Seed default admin on first boot
+        admin_pass = (s.admin_password_hash if s.admin_password_hash
+                      else s.admin_default_password)
+        _auth_mgr.seed_admin(s.admin_username, admin_pass)
+    return _auth_mgr
+
+
+# ── FastAPI bearer dependency ─────────────────────────────────────────────────
+_bearer = HTTPBearer(auto_error=False)
+
+def current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(_bearer),
+) -> dict:
+    """
+    Dependency: extracts and validates the JWT from the Authorization header.
+    Raises HTTP 401 if the token is missing or invalid.
+    """
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token    = credentials.credentials
+    auth_mgr = get_auth_manager()
+    username = auth_mgr.decode_access_token(token)
+    if not username:
+        raise HTTPException(status_code=401, detail="Token expired or invalid")
+    user = auth_mgr.get_user(username)
+    if not user or not user.get("is_active"):
+        raise HTTPException(status_code=401, detail="User not found or inactive")
+    return user
+
+
+def admin_user(user: dict = Depends(current_user)) -> dict:
+    """Dependency: same as current_user but also requires is_admin=True."""
+    if not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+
+# ── Request / response models ─────────────────────────────────────────────────
+
+class RegisterRequest(BaseModel):
+    username:  str = Field(..., min_length=3, max_length=64,
+                           pattern=r"^[a-zA-Z0-9_.-]+$")
+    password:  str = Field(..., min_length=8, max_length=128)
+    email:     str = Field(default="", max_length=256)
+    full_name: str = Field(default="", max_length=128)
+
+class LoginRequest(BaseModel):
+    username: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=1)
+
+class RefreshRequest(BaseModel):
+    refresh_token: str = Field(..., min_length=10)
+
+class LogoutRequest(BaseModel):
+    refresh_token:  str  = Field(...,          min_length=10)
+    logout_all:     bool = Field(default=False)
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8)
+
+
+# ── Endpoints ─────────────────────────────────────────────────────────────────
+
+@app.post("/api/auth/register", status_code=201, tags=["Auth"])
+async def auth_register(req: RegisterRequest):
+    """
+    Register a new user account.
+    Returns the created user profile (no token — login separately).
+    """
+    auth_mgr = get_auth_manager()
+    try:
+        user = auth_mgr.register(
+            username=req.username,
+            password=req.password,
+            email=req.email,
+            full_name=req.full_name,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    log.info("auth.register", username=req.username)
+    return {"message": "Account created successfully", "user": user}
+
+
+@app.post("/api/auth/login", tags=["Auth"])
+async def auth_login(req: LoginRequest):
+    """
+    Login with username and password.
+    Returns:
+      - access_token  (JWT, 24 h)
+      - refresh_token (JWT, 30 days, stored in DB for revocation)
+      - token_type    "bearer"
+      - user          profile dict
+    """
+    auth_mgr = get_auth_manager()
+    user = auth_mgr.authenticate(req.username, req.password)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token  = auth_mgr.create_access_token(req.username)
+    refresh_token = auth_mgr.create_refresh_token(req.username)
+    log.info("auth.login", username=req.username)
+    return {
+        "access_token":  access_token,
+        "refresh_token": refresh_token,
+        "token_type":    "bearer",
+        "expires_in":    auth_mgr.access_expire_minutes * 60,
+        "user":          user,
+    }
+
+
+@app.post("/api/auth/refresh", tags=["Auth"])
+async def auth_refresh(req: RefreshRequest):
+    """
+    Exchange a valid refresh token for a new access token.
+    The refresh token itself is NOT rotated (stateful server-side check).
+    """
+    auth_mgr = get_auth_manager()
+    new_access = auth_mgr.refresh_access_token(req.refresh_token)
+    if not new_access:
+        raise HTTPException(
+            status_code=401,
+            detail="Refresh token expired, revoked, or invalid — please log in again",
+        )
+    return {
+        "access_token": new_access,
+        "token_type":   "bearer",
+        "expires_in":   auth_mgr.access_expire_minutes * 60,
+    }
+
+
+@app.post("/api/auth/logout", tags=["Auth"])
+async def auth_logout(req: LogoutRequest,
+                      user: dict = Depends(current_user)):
+    """
+    Logout:
+      - logout_all=false  → revoke only the supplied refresh token
+      - logout_all=true   → revoke ALL refresh tokens for this account (logout everywhere)
+    """
+    auth_mgr = get_auth_manager()
+    if req.logout_all:
+        count = auth_mgr.revoke_all_tokens(user["username"])
+        log.info("auth.logout.all", username=user["username"], revoked=count)
+        return {"message": f"Logged out from all devices ({count} session(s) revoked)"}
+    else:
+        auth_mgr.revoke_refresh_token(req.refresh_token)
+        log.info("auth.logout", username=user["username"])
+        return {"message": "Logged out successfully"}
+
+
+@app.get("/api/auth/me", tags=["Auth"])
+async def auth_me(user: dict = Depends(current_user)):
+    """Return the authenticated user's profile."""
+    return {"user": user}
+
+
+@app.post("/api/auth/change-password", tags=["Auth"])
+async def auth_change_password(req: ChangePasswordRequest,
+                                user: dict = Depends(current_user)):
+    """Change the current user's password. Requires the old password."""
+    auth_mgr = get_auth_manager()
+    ok = auth_mgr.change_password(user["username"], req.old_password, req.new_password)
+    if not ok:
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    # Revoke all sessions — user must log in again with new password
+    auth_mgr.revoke_all_tokens(user["username"])
+    log.info("auth.password_changed", username=user["username"])
+    return {"message": "Password changed successfully. Please log in again."}
+
+
+@app.get("/api/auth/users", tags=["Auth"])
+async def auth_list_users(admin: dict = Depends(admin_user)):
+    """Admin only: list all registered users."""
+    auth_mgr = get_auth_manager()
+    with auth_mgr.SessionLocal() as s:
+        from src.youtube_instagram_bot.auth.auth_manager_session import UserRow
+        rows = s.query(UserRow).all()
+        return {
+            "users": [
+                {
+                    "username":   r.username,
+                    "email":      r.email or "",
+                    "full_name":  r.full_name or "",
+                    "is_active":  r.is_active,
+                    "is_admin":   r.is_admin,
+                    "created_at": r.created_at.isoformat() if r.created_at else "",
+                    "last_login": r.last_login.isoformat() if r.last_login else None,
+                }
+                for r in rows
+            ],
+            "total": len(rows),
+        }

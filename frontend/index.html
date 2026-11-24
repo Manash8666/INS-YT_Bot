@@ -57,13 +57,20 @@
     </nav>
     <div class="sidebar-footer">
       <div class="user-info">
-        <i class="fas fa-user-circle"></i>
+        <i class="fas fa-user-circle" style="color:var(--primary)"></i>
         <div class="user-details">
-          <span class="username">Admin</span>
-          <span class="user-role">Bot Operator</span>
+          <span class="username" id="sidebar-username">Loading...</span>
+          <span class="user-role" id="sidebar-role">Bot Operator</span>
         </div>
       </div>
-      <button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      <div style="display:flex;gap:8px">
+        <button class="logout-btn" style="flex:1" onclick="logoutCurrent()" title="Sign out of this device">
+          <i class="fas fa-sign-out-alt"></i> Sign Out
+        </button>
+        <button class="logout-btn" style="padding:10px 12px;flex-shrink:0" onclick="logoutAll()" title="Sign out of all devices">
+          <i class="fas fa-globe"></i>
+        </button>
+      </div>
     </div>
   </aside>
 
@@ -1499,6 +1506,7 @@
     </div>
 </body>
 </html>
+
 
 
 

@@ -1434,3 +1434,213 @@ document.querySelectorAll(".nav-item").forEach(item => {
 
 // Initial status check
 setTimeout(updateConnectionStatus, 2500);
+
+
+// ════════════════════════════════════════════════════════════════════════════
+//  AUTH GUARD  —  Token management, route protection, user session
+// ════════════════════════════════════════════════════════════════════════════
+
+const TOKEN_KEY   = "bp_access";
+const REFRESH_KEY = "bp_refresh";
+const USER_KEY    = "bp_user";
+
+// ── Token helpers ─────────────────────────────────────────────────────────────
+
+function getAccessToken() {
+    return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || "";
+}
+function getRefreshToken() {
+    return localStorage.getItem(REFRESH_KEY) || sessionStorage.getItem(REFRESH_KEY) || "";
+}
+function getStoredUser() {
+    try {
+        const raw = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+}
+function clearSession() {
+    [localStorage, sessionStorage].forEach(s => {
+        s.removeItem(TOKEN_KEY);
+        s.removeItem(REFRESH_KEY);
+        s.removeItem(USER_KEY);
+    });
+}
+
+// ── Authenticated fetch wrapper (auto-refresh on 401) ─────────────────────────
+
+async function authFetch(url, options = {}) {
+    const token = getAccessToken();
+    options.headers = { ...(options.headers || {}), "Authorization": "Bearer " + token };
+
+    let res = await fetch(url, options);
+
+    if (res.status === 401) {
+        // Try refreshing the access token
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) {
+            redirectToLogin();
+            throw new Error("Session expired");
+        }
+        const rr = await fetch(`${API}/api/auth/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+        if (!rr.ok) {
+            clearSession();
+            redirectToLogin();
+            throw new Error("Session expired — please log in again");
+        }
+        const refreshData = await rr.json();
+        // Save new access token (preserve storage type)
+        const store = localStorage.getItem(TOKEN_KEY) ? localStorage : sessionStorage;
+        store.setItem(TOKEN_KEY, refreshData.access_token);
+
+        // Retry original request with new token
+        options.headers["Authorization"] = "Bearer " + refreshData.access_token;
+        res = await fetch(url, options);
+    }
+    return res;
+}
+
+// Override the existing `post` helper to use authFetch
+async function post(path, body) {
+    const res = await authFetch(`${API}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+    }
+    return res.json();
+}
+
+// ── Route guard ───────────────────────────────────────────────────────────────
+
+function redirectToLogin() {
+    window.location.href = "auth.html";
+}
+
+async function checkAuthGuard() {
+    const token = getAccessToken();
+    if (!token) {
+        redirectToLogin();
+        return;
+    }
+    // Validate token against /api/auth/me
+    try {
+        const res = await fetch(`${API}/api/auth/me`, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        if (res.status === 401) {
+            // Try refresh
+            const refresh = getRefreshToken();
+            if (!refresh) { clearSession(); redirectToLogin(); return; }
+            const rr = await fetch(`${API}/api/auth/refresh`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ refresh_token: refresh }),
+            });
+            if (!rr.ok) { clearSession(); redirectToLogin(); return; }
+            const rd = await rr.json();
+            const store = localStorage.getItem(TOKEN_KEY) ? localStorage : sessionStorage;
+            store.setItem(TOKEN_KEY, rd.access_token);
+            // Load user again
+            const r2 = await fetch(`${API}/api/auth/me`, {
+                headers: { "Authorization": "Bearer " + rd.access_token }
+            });
+            if (!r2.ok) { clearSession(); redirectToLogin(); return; }
+            const d2 = await r2.json();
+            updateSidebarUser(d2.user);
+        } else if (!res.ok) {
+            clearSession(); redirectToLogin(); return;
+        } else {
+            const data = await res.json();
+            updateSidebarUser(data.user);
+        }
+    } catch {
+        // API offline — allow cached user
+        const cached = getStoredUser();
+        if (!cached) { redirectToLogin(); return; }
+        updateSidebarUser(cached);
+    }
+}
+
+function updateSidebarUser(user) {
+    if (!user) return;
+    const unEl   = document.getElementById("sidebar-username");
+    const roleEl = document.getElementById("sidebar-role");
+    if (unEl)   unEl.textContent   = user.full_name || user.username;
+    if (roleEl) roleEl.textContent = user.is_admin ? "Administrator" : "Bot Operator";
+}
+
+// ── Logout ────────────────────────────────────────────────────────────────────
+
+async function logoutCurrent() {
+    if (!confirm("Sign out of this device?")) return;
+    const refreshToken = getRefreshToken();
+    try {
+        const token = getAccessToken();
+        await fetch(`${API}/api/auth/logout`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token,
+            },
+            body: JSON.stringify({ refresh_token: refreshToken, logout_all: false }),
+        });
+    } catch {}
+    clearSession();
+    showToast("Signed out successfully", "info");
+    setTimeout(() => redirectToLogin(), 800);
+}
+
+async function logoutAll() {
+    if (!confirm("Sign out of ALL devices? All active sessions will be terminated.")) return;
+    const refreshToken = getRefreshToken();
+    try {
+        const token = getAccessToken();
+        await fetch(`${API}/api/auth/logout`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token,
+            },
+            body: JSON.stringify({ refresh_token: refreshToken, logout_all: true }),
+        });
+    } catch {}
+    clearSession();
+    showToast("Signed out from all devices", "info");
+    setTimeout(() => redirectToLogin(), 800);
+}
+
+// ── Wire the old logout button in case it still exists ────────────────────────
+document.querySelector(".logout-btn")?.addEventListener("click", function(e) {
+    // The new buttons use onclick= directly; this handles any legacy button
+    if (!e.target.closest("[onclick]")) {
+        logoutCurrent();
+    }
+});
+
+// ── Add auth headers to all future API calls ─────────────────────────────────
+const _origFetch = window.fetch.bind(window);
+window.fetch = function(url, opts = {}) {
+    // Only inject auth header for our API calls
+    if (typeof url === "string" && url.startsWith(API + "/api/") &&
+        !url.includes("/api/auth/login") &&
+        !url.includes("/api/auth/register") &&
+        !url.includes("/api/auth/refresh")) {
+        const token = getAccessToken();
+        if (token) {
+            opts.headers = { ...(opts.headers || {}), "Authorization": "Bearer " + token };
+        }
+    }
+    return _origFetch(url, opts);
+};
+
+// ── Boot: run auth guard as soon as DOM is ready ──────────────────────────────
+document.addEventListener("DOMContentLoaded", function() {
+    checkAuthGuard();
+});

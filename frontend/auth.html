@@ -1,0 +1,486 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BotPlatform — Sign In</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --primary:#6366f1; --primary-dark:#4f46e5;
+      --danger:#ef4444; --success:#10b981;
+      --dark:#1e293b; --gray:#94a3b8;
+      --border:#e2e8f0; --light:#f8fafc;
+    }
+    body {
+      font-family:'Inter',-apple-system,sans-serif;
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      min-height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      padding:20px;
+    }
+    .auth-container {
+      width:100%; max-width:440px;
+    }
+    /* Logo */
+    .auth-logo {
+      text-align:center; margin-bottom:32px; color:white;
+    }
+    .auth-logo .icon {
+      width:64px; height:64px; background:rgba(255,255,255,.2);
+      border-radius:16px; display:flex; align-items:center; justify-content:center;
+      font-size:28px; margin:0 auto 12px; backdrop-filter:blur(8px);
+    }
+    .auth-logo h1 { font-size:24px; font-weight:700; margin-bottom:4px; }
+    .auth-logo p  { font-size:14px; opacity:.8; }
+
+    /* Card */
+    .auth-card {
+      background:white; border-radius:20px; padding:36px;
+      box-shadow:0 24px 64px rgba(0,0,0,.18);
+    }
+
+    /* Tabs */
+    .auth-tabs {
+      display:flex; background:#f1f5f9; border-radius:10px;
+      padding:4px; margin-bottom:28px; gap:4px;
+    }
+    .auth-tab {
+      flex:1; padding:10px; border:none; background:none;
+      border-radius:8px; font-size:14px; font-weight:500;
+      color:var(--gray); cursor:pointer; transition:all .2s;
+    }
+    .auth-tab.active {
+      background:white; color:var(--dark);
+      box-shadow:0 1px 4px rgba(0,0,0,.1);
+    }
+
+    /* Form */
+    .auth-panel { display:none; }
+    .auth-panel.active { display:block; }
+
+    .form-group { margin-bottom:18px; }
+    .form-group label {
+      display:block; margin-bottom:6px;
+      font-size:13px; font-weight:600; color:var(--dark);
+    }
+    .input-wrap {
+      position:relative;
+    }
+    .input-wrap i.prefix {
+      position:absolute; left:12px; top:50%; transform:translateY(-50%);
+      color:var(--gray); font-size:15px; pointer-events:none;
+    }
+    .input-wrap input {
+      width:100%; padding:11px 12px 11px 38px;
+      border:1.5px solid var(--border); border-radius:10px;
+      font-size:14px; font-family:inherit; transition:all .2s;
+      background:#fafafa;
+    }
+    .input-wrap input:focus {
+      outline:none; border-color:var(--primary);
+      background:white; box-shadow:0 0 0 3px rgba(99,102,241,.1);
+    }
+    .input-wrap .toggle-pw {
+      position:absolute; right:12px; top:50%; transform:translateY(-50%);
+      cursor:pointer; color:var(--gray); font-size:14px; border:none; background:none;
+    }
+    .input-wrap .toggle-pw:hover { color:var(--dark); }
+
+    /* Password strength */
+    .pw-strength { margin-top:6px; display:none; }
+    .pw-strength.show { display:block; }
+    .pw-bar { height:4px; border-radius:2px; background:#e2e8f0; overflow:hidden; margin-bottom:4px; }
+    .pw-bar-fill { height:100%; border-radius:2px; transition:all .3s; width:0; }
+    .pw-hint { font-size:11px; color:var(--gray); }
+
+    /* Submit button */
+    .auth-btn {
+      width:100%; padding:13px; border:none; border-radius:10px;
+      background:linear-gradient(135deg,var(--primary),#8b5cf6);
+      color:white; font-size:15px; font-weight:600;
+      cursor:pointer; transition:all .2s; margin-top:6px;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+    }
+    .auth-btn:hover:not(:disabled) { opacity:.9; transform:translateY(-1px); }
+    .auth-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+
+    /* Divider */
+    .divider {
+      display:flex; align-items:center; gap:12px;
+      margin:20px 0; color:var(--gray); font-size:12px;
+    }
+    .divider::before, .divider::after {
+      content:''; flex:1; height:1px; background:var(--border);
+    }
+
+    /* Alert */
+    .auth-alert {
+      padding:12px 14px; border-radius:8px; font-size:13px;
+      margin-bottom:16px; display:none; align-items:center; gap:8px;
+    }
+    .auth-alert.show { display:flex; }
+    .auth-alert.error   { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+    .auth-alert.success { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+
+    /* Links */
+    .auth-link {
+      text-align:center; margin-top:20px; font-size:13px; color:var(--gray);
+    }
+    .auth-link a { color:var(--primary); text-decoration:none; font-weight:500; }
+    .auth-link a:hover { text-decoration:underline; }
+
+    /* Remember + forgot row */
+    .form-row {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:18px; font-size:13px;
+    }
+    .form-row label { display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--gray); }
+    .form-row a { color:var(--primary); text-decoration:none; }
+    .form-row a:hover { text-decoration:underline; }
+
+    /* Default creds notice */
+    .default-creds {
+      background:#fffbeb; border:1px solid #fcd34d; border-radius:8px;
+      padding:10px 14px; font-size:12px; color:#92400e; margin-bottom:16px;
+    }
+    .default-creds code {
+      background:#fef3c7; padding:1px 5px; border-radius:4px;
+      font-family:monospace;
+    }
+
+    /* Footer */
+    .auth-footer {
+      text-align:center; margin-top:24px; font-size:12px;
+      color:rgba(255,255,255,.65);
+    }
+
+    @media (max-width:480px) {
+      .auth-card { padding:24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-container">
+
+  <!-- Logo -->
+  <div class="auth-logo">
+    <div class="icon"><i class="fas fa-robot"></i></div>
+    <h1>BotPlatform</h1>
+    <p>YouTube · Instagram · Rumble Automation</p>
+  </div>
+
+  <!-- Card -->
+  <div class="auth-card">
+
+    <!-- Tabs: Sign In / Create Account -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login"    onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab"        id="tab-register" onclick="switchTab('register')">Create Account</button>
+    </div>
+
+    <!-- Alert box -->
+    <div class="auth-alert" id="auth-alert"></div>
+
+    <!-- ── LOGIN PANEL ──────────────────────────────────────────────── -->
+    <div class="auth-panel active" id="panel-login">
+
+      <div class="default-creds">
+        <i class="fas fa-info-circle"></i>
+        Default credentials — change after first login:<br>
+        Username: <code>admin</code> &nbsp; Password: <code>BotPlatform@2024</code>
+      </div>
+
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Username</label>
+          <div class="input-wrap">
+            <i class="fas fa-user prefix"></i>
+            <input id="login-username" type="text" placeholder="Enter your username"
+                   autocomplete="username" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock prefix"></i>
+            <input id="login-password" type="password" placeholder="Enter your password"
+                   autocomplete="current-password" required>
+            <button type="button" class="toggle-pw" onclick="togglePw('login-password', this)">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>
+            <input type="checkbox" id="remember-me"> Remember me (30 days)
+          </label>
+          <a href="#" onclick="showForgotHint(); return false;">Forgot password?</a>
+        </div>
+        <button type="submit" class="auth-btn" id="login-btn">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+      </form>
+
+      <div class="divider">or</div>
+      <div class="auth-link">
+        Don't have an account?
+        <a href="#" onclick="switchTab('register'); return false;">Create one</a>
+      </div>
+    </div>
+
+    <!-- ── REGISTER PANEL ───────────────────────────────────────────── -->
+    <div class="auth-panel" id="panel-register">
+      <form id="register-form" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label>Username <span style="color:#94a3b8;font-weight:400">(letters, numbers, _.-)</span></label>
+          <div class="input-wrap">
+            <i class="fas fa-user prefix"></i>
+            <input id="reg-username" type="text" placeholder="Choose a username"
+                   pattern="[a-zA-Z0-9_.\-]+" minlength="3" maxlength="64"
+                   autocomplete="username" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Full Name <span style="color:#94a3b8;font-weight:400">(optional)</span></label>
+          <div class="input-wrap">
+            <i class="fas fa-id-card prefix"></i>
+            <input id="reg-fullname" type="text" placeholder="Your name" maxlength="128">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email <span style="color:#94a3b8;font-weight:400">(optional)</span></label>
+          <div class="input-wrap">
+            <i class="fas fa-envelope prefix"></i>
+            <input id="reg-email" type="email" placeholder="you@example.com" maxlength="256">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock prefix"></i>
+            <input id="reg-password" type="password" placeholder="Min 8 characters"
+                   minlength="8" maxlength="128" autocomplete="new-password"
+                   oninput="checkPwStrength(this.value)" required>
+            <button type="button" class="toggle-pw" onclick="togglePw('reg-password', this)">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <div class="pw-strength" id="pw-strength">
+            <div class="pw-bar"><div class="pw-bar-fill" id="pw-bar-fill"></div></div>
+            <div class="pw-hint" id="pw-hint"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock prefix"></i>
+            <input id="reg-confirm" type="password" placeholder="Repeat password"
+                   minlength="8" maxlength="128" autocomplete="new-password" required>
+            <button type="button" class="toggle-pw" onclick="togglePw('reg-confirm', this)">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="auth-btn" id="register-btn">
+          <i class="fas fa-user-plus"></i> Create Account
+        </button>
+      </form>
+
+      <div class="divider">or</div>
+      <div class="auth-link">
+        Already have an account?
+        <a href="#" onclick="switchTab('login'); return false;">Sign In</a>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+  <div class="auth-footer">
+    &copy; 2024 BotPlatform &nbsp;·&nbsp; YouTube &amp; Instagram Automation
+  </div>
+
+</div><!-- /container -->
+
+<script>
+const API = "http://localhost:8000";
+
+// ── Token storage ─────────────────────────────────────────────────────────────
+function saveSession(data, remember) {
+  const store = remember ? localStorage : sessionStorage;
+  store.setItem("bp_access",  data.access_token);
+  store.setItem("bp_refresh", data.refresh_token);
+  store.setItem("bp_user",    JSON.stringify(data.user));
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".auth-panel").forEach(p => p.classList.remove("active"));
+  document.getElementById("tab-"    + tab).classList.add("active");
+  document.getElementById("panel-"  + tab).classList.add("active");
+  hideAlert();
+}
+
+// ── Alert helpers ─────────────────────────────────────────────────────────────
+function showAlert(msg, type) {
+  const el = document.getElementById("auth-alert");
+  el.className = "auth-alert show " + type;
+  el.innerHTML = `<i class="fas fa-${type==="error"?"exclamation-circle":"check-circle"}"></i> ${msg}`;
+}
+function hideAlert() {
+  document.getElementById("auth-alert").className = "auth-alert";
+}
+
+// ── Password visibility toggle ────────────────────────────────────────────────
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const icon  = btn.querySelector("i");
+  if (input.type === "password") {
+    input.type = "text";
+    icon.className = "fas fa-eye-slash";
+  } else {
+    input.type = "password";
+    icon.className = "fas fa-eye";
+  }
+}
+
+// ── Password strength ─────────────────────────────────────────────────────────
+function checkPwStrength(pw) {
+  const wrap = document.getElementById("pw-strength");
+  const bar  = document.getElementById("pw-bar-fill");
+  const hint = document.getElementById("pw-hint");
+  wrap.classList.add("show");
+  let score = 0;
+  if (pw.length >= 8)  score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+  const levels = [
+    { pct: "20%", color: "#ef4444", label: "Very weak" },
+    { pct: "40%", color: "#f97316", label: "Weak" },
+    { pct: "60%", color: "#eab308", label: "Fair" },
+    { pct: "80%", color: "#22c55e", label: "Strong" },
+    { pct:"100%", color: "#10b981", label: "Very strong" },
+  ];
+  const lvl = levels[Math.min(score, 4)];
+  bar.style.width      = lvl.pct;
+  bar.style.background = lvl.color;
+  hint.textContent     = lvl.label;
+  hint.style.color     = lvl.color;
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+async function handleLogin(e) {
+  e.preventDefault();
+  hideAlert();
+  const username = document.getElementById("login-username").value.trim();
+  const password = document.getElementById("login-password").value;
+  const remember = document.getElementById("remember-me").checked;
+  const btn = document.getElementById("login-btn");
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+
+  try {
+    const res = await fetch(`${API}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showAlert(data.detail || "Login failed", "error");
+      return;
+    }
+
+    saveSession(data, remember);
+    showAlert("Welcome back, " + (data.user?.full_name || data.user?.username) + "! Redirecting...", "success");
+    setTimeout(() => { window.location.href = "index.html"; }, 900);
+
+  } catch (err) {
+    showAlert("Cannot connect to API server. Make sure python main.py is running.", "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+  }
+}
+
+// ── REGISTER ──────────────────────────────────────────────────────────────────
+async function handleRegister(e) {
+  e.preventDefault();
+  hideAlert();
+
+  const username  = document.getElementById("reg-username").value.trim();
+  const full_name = document.getElementById("reg-fullname").value.trim();
+  const email     = document.getElementById("reg-email").value.trim();
+  const password  = document.getElementById("reg-password").value;
+  const confirm   = document.getElementById("reg-confirm").value;
+  const btn       = document.getElementById("register-btn");
+
+  if (password !== confirm) {
+    showAlert("Passwords do not match", "error");
+    return;
+  }
+  if (password.length < 8) {
+    showAlert("Password must be at least 8 characters", "error");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+
+  try {
+    const res = await fetch(`${API}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password, email, full_name }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showAlert(data.detail || "Registration failed", "error");
+      return;
+    }
+
+    showAlert("Account created! You can now sign in.", "success");
+    document.getElementById("register-form").reset();
+    setTimeout(() => {
+      switchTab("login");
+      document.getElementById("login-username").value = username;
+    }, 1500);
+
+  } catch (err) {
+    showAlert("Cannot connect to API server.", "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+  }
+}
+
+// ── Forgot password hint ──────────────────────────────────────────────────────
+function showForgotHint() {
+  showAlert(
+    "Password reset is not available yet. Contact your admin or use the default credentials: admin / BotPlatform@2024",
+    "error"
+  );
+}
+
+// ── Auto-redirect if already logged in ───────────────────────────────────────
+(function() {
+  const token = localStorage.getItem("bp_access") || sessionStorage.getItem("bp_access");
+  if (token) {
+    // Quick token validation
+    fetch(`${API}/api/auth/me`, { headers: { Authorization: "Bearer " + token } })
+      .then(r => { if (r.ok) window.location.href = "index.html"; })
+      .catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
