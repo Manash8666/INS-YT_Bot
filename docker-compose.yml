@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  bot:
+    build: .
+    image: youtube-instagram-bot:latest
+    container_name: yib_app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: sqlite:////app/data/bot.db
+      ENVIRONMENT: production
+      LOG_FORMAT: json
+      API_HOST: "0.0.0.0"
+      API_PORT: "8000"
+    volumes:
+      - bot_data:/app/data
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    image: nginx:1.27-alpine
+    container_name: yib_frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      bot:
+        condition: service_healthy
+
+volumes:
+  bot_data:

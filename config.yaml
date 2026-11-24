@@ -1,0 +1,53 @@
+# YouTube-Instagram Bot Configuration
+
+storage:
+  type: sqlite
+  connection_string: "sqlite:///bot.db"
+
+encryption:
+  master_key_env_var: "BOT_MASTER_KEY"
+
+logging:
+  verbosity: "INFO"
+  level: 20
+
+scheduler:
+  check_interval_seconds: 60
+  max_dispatch_attempts: 3
+
+rate_limit:
+  platforms:
+    youtube:
+      window_seconds: 3600
+      max_requests: 10000
+    instagram:
+      window_seconds: 3600
+      max_requests: 5000
+  min_spacing_seconds: 1
+
+retry_profiles:
+  youtube:
+    max_retries: 3
+    initial_delay_seconds: 2.0
+    max_delay_seconds: 60.0
+    multiplier: 2.0
+  instagram:
+    max_retries: 3
+    initial_delay_seconds: 2.0
+    max_delay_seconds: 60.0
+    multiplier: 2.0
+  general:
+    max_retries: 5
+    initial_delay_seconds: 1.0
+    max_delay_seconds: 60.0
+    multiplier: 2.0
+  token_refresh:
+    max_retries: 3
+    initial_delay_seconds: 1.0
+    max_delay_seconds: 60.0
+    multiplier: 2.0
+
+logger:
+  buffer_capacity: 10000
+  recovery_max_retries: 10
+  recovery_retry_interval_seconds: 30

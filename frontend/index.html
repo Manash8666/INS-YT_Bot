@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BotPlatform — YouTube · Instagram · Rumble</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-container">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <i class="fas fa-robot"></i>
+      <h2>BotPlatform</h2>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-page="dashboard" href="#">
+        <i class="fas fa-home"></i><span>Dashboard</span>
+      </a>
+      <a class="nav-item" data-page="magic" href="#">
+        <i class="fas fa-magic"></i><span>✨ Magic</span>
+      </a>
+      <a class="nav-item" data-page="youtube" href="#">
+        <i class="fab fa-youtube"></i><span>YouTube</span>
+      </a>
+      <a class="nav-item" data-page="instagram" href="#">
+        <i class="fab fa-instagram"></i><span>Instagram</span>
+      </a>
+      <a class="nav-item" data-page="rumble" href="#">
+        <i class="fas fa-video"></i><span>Rumble</span>
+      </a>
+      <a class="nav-item" data-page="engagement" href="#">
+        <i class="fas fa-heart"></i><span>Engagement</span>
+      </a>
+      <a class="nav-item" data-page="ig-targeting" href="#">
+        <i class="fab fa-instagram"></i><span>IG Targeting</span>
+      </a>
+      <a class="nav-item" data-page="yt-monetize" href="#">
+        <i class="fas fa-dollar-sign"></i><span>YT Monetize</span>
+      </a>
+      <a class="nav-item" data-page="automation" href="#">
+        <i class="fas fa-bolt"></i><span>Automation</span>
+      </a>
+      <a class="nav-item" data-page="scheduler" href="#">
+        <i class="fas fa-calendar"></i><span>Scheduler</span>
+      </a>
+      <a class="nav-item" data-page="settings" href="#">
+        <i class="fas fa-cog"></i><span>Settings</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <div class="user-details">
+          <span class="username">Admin</span>
+          <span class="user-role">Bot Operator</span>
+        </div>
+      </div>
+      <button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────────────────────────── -->
+  <main class="main-content">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+        <h1 id="page-title">Dashboard</h1>
+      </div>
+      <div class="header-right">
+        <div class="status-indicator">
+          <i class="fas fa-circle status-active"></i>
+          <span>System Active</span>
+        </div>
+        <div class="notifications">
+          <i class="fas fa-bell"></i>
+          <span class="badge">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="page active">
+      <div class="dashboard-header">
+        <h2>Overview</h2>
+        <div class="date-range"><i class="fas fa-calendar"></i><span>Live</span></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon youtube"><i class="fab fa-youtube"></i></div>
+          <div class="stat-content">
+            <span class="stat-label">YouTube Videos</span>
+            <span class="stat-value" id="youtube-count">—</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon instagram"><i class="fab fa-instagram"></i></div>
+          <div class="stat-content">
+            <span class="stat-label">Instagram Posts</span>
+            <span class="stat-value" id="instagram-count">—</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon rumble"><i class="fas fa-video"></i></div>
+          <div class="stat-content">
+            <span class="stat-label">Rumble Views</span>
+            <span class="stat-value" id="rumble-count">—</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon followers"><i class="fas fa-users"></i></div>
+          <div class="stat-content">
+            <span class="stat-label">Total Followers</span>
+            <span class="stat-value" id="follower-count">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="content-grid">
+        <div class="recent-activity">
+          <h3>Recent Activity</h3>
+          <div class="activity-list" id="activity-list"></div>
+        </div>
+        <div class="system-status">
+          <h3>System Status</h3>
+          <div class="status-list">
+            <div class="status-item">
+              <i class="fas fa-database" style="color:var(--primary)"></i>
+              <span>Storage</span>
+              <span class="status-text" id="status-storage">Checking…</span>
+            </div>
+            <div class="status-item">
+              <i class="fas fa-plug" style="color:var(--primary)"></i>
+              <span>API Connections</span>
+              <span class="status-text" id="status-api">Checking…</span>
+            </div>
+            <div class="status-item">
+              <i class="fas fa-shield-alt" style="color:var(--primary)"></i>
+              <span>Rate Limits</span>
+              <span class="status-text" id="status-ratelimits">Checking…</span>
+            </div>
+          </div>
+          <br>
+          <h3>Rate Limit Usage</h3>
+          <div class="rl-row"><span>Instagram</span><span id="rl-instagram">—</span></div>
+          <div class="rl-row"><span>YouTube</span><span id="rl-youtube">—</span></div>
+          <div class="rl-row"><span>Rumble</span><span id="rl-rumble">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- YouTube -->
+    <div id="youtube" class="page">
+      <div class="page-header">
+        <h2>YouTube Management</h2>
+        <span id="yt-mode-badge" style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;color:white;background:var(--warning)">SIM</span>
+      </div>
+
+      <!-- Daily stats strip -->
+      <div class="rumble-stats" style="margin-bottom:20px">
+        <div class="stat-item"><span class="stat-label">Quota Used</span><span class="stat-value" id="yt-quota-used">0</span></div>
+        <div class="stat-item"><span class="stat-label">Quota Left</span><span class="stat-value" id="yt-quota-remaining">10,000</span></div>
+        <div class="stat-item"><span class="stat-label">Uploads Today</span><span class="stat-value" id="yt-uploads-today">0</span></div>
+        <div class="stat-item"><span class="stat-label">Likes Today</span><span class="stat-value" id="yt-likes-today">0</span></div>
+        <div class="stat-item"><span class="stat-label">Subscribes Today</span><span class="stat-value" id="yt-subs-today">0</span></div>
+      </div>
+
+      <!-- Channel info -->
+      <div id="yt-channel-card" style="display:none;background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <h3 style="margin-bottom:12px"><i class="fab fa-youtube" style="color:#ff0000"></i> Your Channel</h3>
+        <div class="rumble-stats">
+          <div class="stat-item"><span class="stat-label">Channel</span><span class="stat-value" id="yt-ch-title" style="font-size:14px">—</span></div>
+          <div class="stat-item"><span class="stat-label">Subscribers</span><span class="stat-value" id="yt-ch-subs">—</span></div>
+          <div class="stat-item"><span class="stat-label">Total Views</span><span class="stat-value" id="yt-ch-views">—</span></div>
+          <div class="stat-item"><span class="stat-label">Videos</span><span class="stat-value" id="yt-ch-videos">—</span></div>
+        </div>
+      </div>
+
+      <!-- Action tabs -->
+      <div class="engagement-tabs tab-group" style="margin-bottom:0">
+        <button class="tab-btn active" data-tab="yt-tab-upload">Upload</button>
+        <button class="tab-btn" data-tab="yt-tab-engage">Search &amp; Engage</button>
+        <button class="tab-btn" data-tab="yt-tab-like">Like</button>
+        <button class="tab-btn" data-tab="yt-tab-comment">Comment</button>
+        <button class="tab-btn" data-tab="yt-tab-subscribe">Subscribe</button>
+      </div>
+
+      <div class="engagement-content">
+
+        <!-- Upload tab -->
+        <div id="yt-tab-upload" class="tab-content active">
+          <div class="form-group">
+            <label>Video File</label>
+            <div class="file-upload">
+              <i class="fas fa-cloud-upload-alt"></i><span>Drag &amp; drop video file</span>
+              <input type="file" accept="video/*" style="display:none">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Title</label>
+            <input id="yt-upload-title" type="text" placeholder="My awesome video" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="yt-upload-desc" rows="3" placeholder="Video description..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Tags (comma separated)</label>
+            <input id="yt-upload-tags" type="text" placeholder="vlog, funny, tutorial">
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div class="form-group" style="flex:1">
+              <label>Type</label>
+              <select id="yt-upload-type">
+                <option value="video">Long-form Video</option>
+                <option value="short">YouTube Short (#Shorts)</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:1">
+              <label>Privacy</label>
+              <select id="yt-upload-privacy">
+                <option value="public">Public</option>
+                <option value="unlisted">Unlisted</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="ytUpload()">
+            <i class="fas fa-upload"></i> Upload
+          </button>
+        </div>
+
+        <!-- Search & Engage tab -->
+        <div id="yt-tab-engage" class="tab-content">
+          <p style="color:var(--gray);font-size:14px;margin-bottom:16px">
+            Search YouTube for videos by keyword, then automatically like, comment, and subscribe.
+            This grows your channel visibility through reciprocal engagement.
+          </p>
+          <div class="form-group">
+            <label>Search Keyword</label>
+            <input id="yt-search-query" type="text" placeholder="fitness motivation, travel vlog...">
+          </div>
+          <div class="form-group">
+            <label>Max Videos to Engage</label>
+            <input id="yt-search-max" type="number" value="10" min="1" max="25">
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+              <input id="yt-do-like" type="checkbox" checked> Like videos
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+              <input id="yt-do-comment" type="checkbox"> Post comments
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+              <input id="yt-do-subscribe" type="checkbox"> Subscribe to channels
+            </label>
+          </div>
+          <div class="form-group" id="yt-comment-text-group" style="display:none">
+            <label>Comment Text</label>
+            <input id="yt-comment-text" type="text" value="Great video! 🔥" maxlength="500">
+          </div>
+          <button class="btn btn-primary" onclick="ytSearchEngage()">
+            <i class="fas fa-search"></i> Search &amp; Engage
+          </button>
+        </div>
+
+        <!-- Like tab -->
+        <div id="yt-tab-like" class="tab-content">
+          <div class="form-group">
+            <label>Video ID or URL</label>
+            <input id="yt-like-id" type="text" placeholder="dQw4w9WgXcQ or full URL">
+            <small>Extract the ID from the URL: youtube.com/watch?v=<strong>dQw4w9WgXcQ</strong></small>
+          </div>
+          <button class="btn btn-primary" onclick="ytLike()">
+            <i class="fas fa-thumbs-up"></i> Like Video
+          </button>
+        </div>
+
+        <!-- Comment tab -->
+        <div id="yt-tab-comment" class="tab-content">
+          <div class="form-group">
+            <label>Video ID or URL</label>
+            <input id="yt-comment-vid-id" type="text" placeholder="dQw4w9WgXcQ or full URL">
+          </div>
+          <div class="form-group">
+            <label>Comment</label>
+            <textarea id="yt-comment-body" rows="3" placeholder="Write your comment..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="ytComment()">
+            <i class="fas fa-comment"></i> Post Comment
+          </button>
+        </div>
+
+        <!-- Subscribe tab -->
+        <div id="yt-tab-subscribe" class="tab-content">
+          <div class="form-group">
+            <label>Channel ID</label>
+            <input id="yt-sub-channel-id" type="text" placeholder="UCxxxxxxxxxxxxxxxxxxxxxx">
+            <small>Find it at youtube.com/channel/<strong>UCxxxxxxxx</strong> or in channel About page</small>
+          </div>
+          <button class="btn btn-primary" onclick="ytSubscribe()">
+            <i class="fas fa-bell"></i> Subscribe
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Instagram -->
+    <div id="instagram" class="page">
+      <div class="page-header">
+        <h2>Instagram Management</h2>
+        <button class="btn btn-primary" onclick="showInstagramModal()">
+          <i class="fas fa-camera"></i> Post Content
+        </button>
+      </div>
+      <div class="instagram-actions">
+        <div class="action-card" onclick="showInstagramModal()">
+          <i class="fas fa-image"></i>
+          <h3>Post Image</h3>
+          <p>Share static photos</p>
+        </div>
+        <div class="action-card" onclick="showInstagramModal()">
+          <i class="fas fa-compact-disc"></i>
+          <h3>Post Reel</h3>
+          <p>Short vertical videos</p>
+        </div>
+        <div class="action-card" onclick="document.querySelector('[data-page=engagement]').click()">
+          <i class="fas fa-user-friends"></i>
+          <h3>Grow Followers</h3>
+          <p>Follow / like automation</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rumble -->
+    <div id="rumble" class="page">
+      <div class="page-header">
+        <h2>Rumble Automation</h2>
+        <button class="btn btn-primary" onclick="showRumbleModal()">
+          <i class="fas fa-play"></i> Generate Views
+        </button>
+      </div>
+      <div class="rumble-stats">
+        <div class="stat-item"><span class="stat-label">Views Today</span><span class="stat-value" id="rumble-today">0</span></div>
+        <div class="stat-item"><span class="stat-label">Views This Week</span><span class="stat-value" id="rumble-week">0</span></div>
+        <div class="stat-item"><span class="stat-label">Active Videos</span><span class="stat-value" id="rumble-active">0</span></div>
+      </div>
+      <div class="youtube-actions" style="margin-top:20px">
+        <div class="action-card" onclick="showRumbleModal()">
+          <i class="fas fa-eye"></i><h3>Generate Views</h3><p>Boost video view count</p>
+        </div>
+        <div class="action-card" onclick="showToast('Like automation started','success')">
+          <i class="fas fa-thumbs-up"></i><h3>Auto Like</h3><p>Like videos automatically</p>
+        </div>
+        <div class="action-card" onclick="showToast('Comment automation started','success')">
+          <i class="fas fa-comment"></i><h3>Auto Comment</h3><p>Engage with comments</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Engagement -->
+    <div id="engagement" class="page">
+      <div class="page-header">
+        <h2>Engagement Automation</h2>
+        <span id="ig-mode-badge" style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;color:white;background:var(--warning)">SIM</span>
+      </div>
+      <!-- Daily stats strip -->
+      <div class="rumble-stats" style="margin-bottom:20px">
+        <div class="stat-item"><span class="stat-label">Follows Today</span><span class="stat-value" id="eng-follows-today">0</span></div>
+        <div class="stat-item"><span class="stat-label">Follows Left</span><span class="stat-value" id="eng-follows-remaining">150</span></div>
+        <div class="stat-item"><span class="stat-label">Likes Today</span><span class="stat-value" id="eng-likes-today">0</span></div>
+        <div class="stat-item"><span class="stat-label">Unfollows Today</span><span class="stat-value" id="eng-unfollows-today">0</span></div>
+      </div>
+      <div class="engagement-tabs tab-group">
+        <button class="tab-btn active" data-tab="tab-follow">Follow</button>
+        <button class="tab-btn" data-tab="tab-unfollow">Unfollow</button>
+        <button class="tab-btn" data-tab="tab-like">Like</button>
+      </div>
+      <div class="engagement-content">
+        <div id="tab-follow" class="tab-content active">
+          <div class="form-group">
+            <label>Target Hashtag</label>
+            <input id="follow-tag" type="text" placeholder="#viral">
+            <small>Follow users who post with this hashtag</small>
+          </div>
+          <div class="form-group">
+            <label>Max Follows (safety limit: 20/session)</label>
+            <input id="follow-max" type="number" value="20" min="1" max="50">
+          </div>
+          <button class="btn btn-primary" onclick="executeFollow()">
+            <i class="fas fa-user-plus"></i> Start Following
+          </button>
+        </div>
+        <div id="tab-unfollow" class="tab-content">
+          <p style="color:var(--gray);margin-bottom:16px;font-size:14px">
+            Unfollow users who haven't followed you back. Maximum 50 per session.
+          </p>
+          <button class="btn btn-danger" onclick="executeUnfollow()">
+            <i class="fas fa-user-minus"></i> Unfollow Non-Reciprocals
+          </button>
+        </div>
+        <div id="tab-like" class="tab-content">
+          <p style="color:var(--gray);margin-bottom:16px;font-size:14px">
+            Auto-like recent posts. Maximum 30 likes per session.
+          </p>
+          <button class="btn btn-primary" onclick="executeLike()">
+            <i class="fas fa-heart"></i> Start Liking
+          </button>
+        </div>
+      </div>
+
+      <!-- Optional: Engage back with your followers -->
+      <div style="margin-top:20px;background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:4px"><i class="fas fa-hand-holding-heart" style="color:#e1306c"></i> Engage Back with Followers <span style="font-size:11px;background:#eff6ff;color:#6366f1;padding:2px 8px;border-radius:10px;margin-left:6px">Optional</span></h3>
+        <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Like or comment on your followers' latest posts. Builds authentic relationships and increases follow-back rate by 2–3×.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:14px">
+          <div class="form-group" style="margin:0"><label>Comment text</label><input id="eng-back-comment" type="text" value="Love this! 🔥" maxlength="500"></div>
+          <div class="form-group" style="margin:0"><label>Max followers to engage</label><input id="eng-back-max" type="number" value="20" min="1" max="100"></div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="eng-back-like" checked> Like their posts</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="eng-back-comment-cb"> Comment on their posts</label>
+        </div>
+        <button class="btn btn-primary" onclick="engageBackFollowers()"><i class="fas fa-hand-holding-heart"></i> Engage with Followers</button>
+        <div id="eng-back-result" style="display:none;margin-top:12px"></div>
+      </div>
+    </div>
+
+      <!-- Optional: Engage back with your followers -->
+      <div style="margin-top:20px;background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:4px">
+          <i class="fas fa-hand-holding-heart" style="color:#e1306c"></i>
+          Engage Back with Followers
+          <span style="font-size:11px;background:#eff6ff;color:#6366f1;padding:2px 8px;border-radius:10px;margin-left:6px">Optional</span>
+        </h3>
+        <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Like or comment on your followers' latest posts. Increases follow-back rate by 2–3×.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:14px">
+          <div class="form-group" style="margin:0"><label>Comment text</label><input id="eng-back-comment" type="text" value="Love this! 🔥" maxlength="500"></div>
+          <div class="form-group" style="margin:0"><label>Max followers to engage</label><input id="eng-back-max" type="number" value="20" min="1" max="100"></div>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="eng-back-like" checked> Like their posts</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="eng-back-comment-cb"> Comment on their posts</label>
+        </div>
+        <button class="btn btn-primary" onclick="engageBackFollowers()"><i class="fas fa-hand-holding-heart"></i> Engage with Followers</button>
+        <div id="eng-back-result" style="display:none;margin-top:12px"></div>
+      </div>
+    <!-- Automation -->
+    <div id="automation" class="page">
+      <div class="page-header"><h2>Batch Automation</h2></div>
+      <div class="automation-section">
+        <h3>Schedule Batch Upload</h3>
+        <div class="form-group">
+          <label>Video Files</label>
+          <div class="file-upload">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>Drag &amp; drop or click to select</span>
+            <input type="file" multiple accept="video/*" style="display:none">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Schedule Time</label>
+          <input id="batch-time" type="datetime-local">
+        </div>
+        <button class="btn btn-primary" onclick="scheduleBatchUpload()">
+          <i class="fas fa-calendar-plus"></i> Schedule Upload
+        </button>
+      </div>
+      <div class="automation-section">
+        <h3>Auto-Schedule Posts</h3>
+        <div class="form-group">
+          <label>Interval Between Posts (hours)</label>
+          <input id="post-interval" type="number" value="8" min="1" max="24">
+          <small>Recommended: 8 hours between posts to avoid detection</small>
+        </div>
+        <button class="btn btn-primary" onclick="autoSchedulePosts()">
+          <i class="fas fa-robot"></i> Auto Schedule
+        </button>
+      </div>
+    </div>
+
+    <!-- Scheduler -->
+    <div id="scheduler" class="page">
+      <div class="page-header"><h2>Scheduled Jobs</h2></div>
+      <div class="scheduler-list">
+        <div class="scheduler-item">
+          <i class="fab fa-youtube" style="color:#ff0000;font-size:20px"></i>
+          <div class="scheduler-info">
+            <span class="job-title">Upload YouTube Short</span>
+            <span class="job-time">Tomorrow, 9:00 AM</span>
+          </div>
+          <span class="status-scheduled">Scheduled</span>
+        </div>
+        <div class="scheduler-item">
+          <i class="fab fa-instagram" style="color:#e1306c;font-size:20px"></i>
+          <div class="scheduler-info">
+            <span class="job-title">Post Instagram Reel</span>
+            <span class="job-time">Tomorrow, 5:00 PM</span>
+          </div>
+          <span class="status-scheduled">Scheduled</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="settings" class="page">
+      <div class="page-header"><h2>Settings</h2></div>
+
+      <!-- YouTube Credentials -->
+      <div class="settings-section">
+        <h3><i class="fab fa-youtube" style="color:#ff0000"></i> YouTube Credentials (OAuth 2.0)</h3>
+        <div id="yt-status-banner" style="padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:14px;background:#fef3c7;color:#92400e">
+          <i class="fas fa-exclamation-triangle"></i>
+          <strong>Simulation Mode</strong> — Enter your OAuth credentials below to enable real YouTube actions.
+        </div>
+        <div class="form-group">
+          <label>Client ID</label>
+          <input id="yt-client-id" type="text" placeholder="xxxx.apps.googleusercontent.com">
+          <small>From <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a> → Credentials → OAuth 2.0 Client IDs</small>
+        </div>
+        <div class="form-group">
+          <label>Client Secret</label>
+          <input id="yt-client-secret" type="password" placeholder="GOCSPX-xxxxxxx">
+        </div>
+        <div class="form-group">
+          <label>Refresh Token</label>
+          <input id="yt-refresh-token" type="password" placeholder="1//xxxxxxxxx">
+          <small>Get via <a href="https://developers.google.com/oauthplayground" target="_blank">OAuth Playground</a> → YouTube Data API v3 → scope: youtube</small>
+        </div>
+        <div class="form-group">
+          <label>Channel ID <small>(optional — auto-detected)</small></label>
+          <input id="yt-channel-id-input" type="text" placeholder="UCxxxxxxxxxxxxxxxxxxxx">
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="saveYouTubeCredentials()">
+            <i class="fas fa-save"></i> Save &amp; Activate
+          </button>
+          <button class="btn btn-secondary" onclick="validateYouTubeToken()">
+            <i class="fas fa-check-circle"></i> Validate Token
+          </button>
+        </div>
+        <div id="yt-validate-result" style="margin-top:12px;display:none"></div>
+      </div>
+      <div class="settings-section">
+        <h3>Safety Rate Limits</h3>
+        <div class="form-group">
+          <label>Instagram Actions / Hour</label>
+          <input type="number" value="15" min="1" max="50">
+          <small>Conservative default: 15/hr. Platform max ≈ 60/hr.</small>
+        </div>
+        <div class="form-group">
+          <label>YouTube Uploads / Hour</label>
+          <input type="number" value="10" min="1" max="30">
+          <small>Conservative default: 10/hr.</small>
+        </div>
+        <div class="form-group">
+          <label>Rumble Views / Hour</label>
+          <input type="number" value="50" min="1" max="200">
+        </div>
+        <button class="btn btn-primary" onclick="showToast('Settings saved','success')">
+          <i class="fas fa-save"></i> Save Settings
+        </button>
+      </div>
+      <div class="settings-section">
+        <h3>Preferences</h3>
+        <div class="form-group">
+          <label>Log Level</label>
+          <select>
+            <option selected>INFO</option>
+            <option>DEBUG</option>
+            <option>WARNING</option>
+            <option>ERROR</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>API Server</label>
+          <input type="text" value="http://localhost:8000">
+        </div>
+        <button class="btn btn-primary" onclick="showToast('Preferences saved','success')">
+          <i class="fas fa-save"></i> Save Preferences
+        </button>
+      </div>
+    </div>
+
+
+    <!-- ✨ Magic Page -->
+    <div id="magic" class="page">
+
+      <!-- Hero header -->
+      <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:16px;padding:32px;margin-bottom:24px;color:white;text-align:center">
+        <div style="font-size:48px;margin-bottom:12px">✨</div>
+        <h2 style="font-size:24px;font-weight:700;margin-bottom:8px">Magic Mode</h2>
+        <p style="opacity:.85;font-size:15px">Paste a YouTube link + Instagram username — the bot handles everything automatically.</p>
+      </div>
+
+      <!-- Input card -->
+      <div style="background:white;border-radius:16px;padding:28px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <div style="display:grid;gap:16px">
+
+          <div class="form-group" style="margin:0">
+            <label style="font-weight:600;font-size:15px">
+              <i class="fab fa-youtube" style="color:#ff0000"></i> YouTube Video Link
+            </label>
+            <input id="magic-yt-url" type="url"
+              placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+              style="font-size:15px;padding:12px 14px">
+            <small>Paste any YouTube video URL — full URL, short URL (youtu.be), or Shorts</small>
+          </div>
+
+          <div class="form-group" style="margin:0">
+            <label style="font-weight:600;font-size:15px">
+              <i class="fab fa-instagram" style="color:#e1306c"></i> Instagram Username or Hashtag
+            </label>
+            <input id="magic-ig-id" type="text"
+              placeholder="@username  or  #hashtag"
+              style="font-size:15px;padding:12px 14px">
+            <small>e.g. <strong>@natgeo</strong> or <strong>#travel</strong> — the bot follows users related to this</small>
+          </div>
+
+        </div>
+
+        <!-- Action toggles -->
+        <div style="margin:20px 0 0;padding:16px;background:#f8fafc;border-radius:12px">
+          <p style="font-weight:600;font-size:13px;color:#64748b;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">What the bot will do</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px">
+            <label class="magic-toggle">
+              <input type="checkbox" id="mt-yt-like" checked>
+              <span><i class="fas fa-thumbs-up" style="color:#ff0000"></i> Like the video</span>
+            </label>
+            <label class="magic-toggle">
+              <input type="checkbox" id="mt-yt-comment" checked>
+              <span><i class="fas fa-comment" style="color:#ff0000"></i> Comment on video</span>
+            </label>
+            <label class="magic-toggle">
+              <input type="checkbox" id="mt-yt-subscribe" checked>
+              <span><i class="fas fa-bell" style="color:#ff0000"></i> Subscribe to channel</span>
+            </label>
+            <label class="magic-toggle">
+              <input type="checkbox" id="mt-yt-engage" checked>
+              <span><i class="fas fa-search" style="color:#ff0000"></i> Engage similar videos</span>
+            </label>
+            <label class="magic-toggle">
+              <input type="checkbox" id="mt-ig-follow" checked>
+              <span><i class="fas fa-user-plus" style="color:#e1306c"></i> Follow on Instagram</span>
+            </label>
+            <label class="magic-toggle">
+              <input type="checkbox" id="mt-ig-like" checked>
+              <span><i class="fas fa-heart" style="color:#e1306c"></i> Like Instagram posts</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Advanced (collapsed) -->
+        <details style="margin-top:16px">
+          <summary style="cursor:pointer;font-size:13px;color:var(--gray);font-weight:500">Advanced options</summary>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:12px">
+            <div class="form-group" style="margin:0">
+              <label>Comment text</label>
+              <input id="magic-comment" type="text" value="Amazing content! 🔥 Check out my channel too!" maxlength="500">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Max YouTube videos to engage</label>
+              <input id="magic-yt-max" type="number" value="10" min="1" max="25">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Max Instagram follows</label>
+              <input id="magic-ig-follow-max" type="number" value="20" min="1" max="50">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Max Instagram likes</label>
+              <input id="magic-ig-like-max" type="number" value="20" min="1" max="50">
+            </div>
+          </div>
+        </details>
+
+        <!-- GO button -->
+        <button id="magic-go-btn" onclick="runMagic()" style="width:100%;margin-top:20px;padding:16px;font-size:16px;font-weight:700;border:none;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;cursor:pointer;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:10px">
+          <i class="fas fa-magic"></i> Run Magic
+        </button>
+      </div>
+
+      <!-- Live progress card (hidden until job starts) -->
+      <div id="magic-progress-card" style="display:none;background:white;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 style="font-size:16px;font-weight:600">
+            <i class="fas fa-circle-notch fa-spin" id="magic-spinner" style="color:var(--primary)"></i>
+            <span id="magic-status-label" style="margin-left:8px">Running…</span>
+          </h3>
+          <span id="magic-job-id-badge" style="font-size:11px;color:var(--gray);font-family:monospace"></span>
+        </div>
+
+        <!-- Progress log -->
+        <div id="magic-log" style="background:#0f172a;border-radius:10px;padding:16px;font-family:monospace;font-size:13px;color:#94a3b8;max-height:320px;overflow-y:auto;line-height:1.8"></div>
+
+        <!-- Results summary (shown on completion) -->
+        <div id="magic-results-summary" style="display:none;margin-top:16px"></div>
+      </div>
+
+      <!-- Past jobs table -->
+      <div id="magic-history" style="display:none;background:white;border-radius:16px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px">Past Runs</h3>
+        <div id="magic-history-list"></div>
+      </div>
+
+    </div>
+
+      <!-- Optional: Engage with subscribers content -->
+      <div style="margin-top:20px;background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:4px">
+          <i class="fas fa-hand-holding-heart" style="color:#ff0000"></i>
+          Engage with Subscribers' Content
+          <span style="font-size:11px;background:#fff1f2;color:#ef4444;padding:2px 8px;border-radius:10px;margin-left:6px">Optional</span>
+        </h3>
+        <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Like or comment on niche channel videos. Real engagement triggers reciprocal watch time and subscriptions.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:14px">
+          <div class="form-group" style="margin:0"><label>Comment text</label><input id="sub-eng-comment" type="text" value="Great content! Keep it up 🔥" maxlength="500"></div>
+          <div class="form-group" style="margin:0"><label>Max channels to engage</label><input id="sub-eng-max" type="number" value="10" min="1" max="50"></div>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="sub-eng-like" checked> Like their videos</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="sub-eng-comment-cb"> Comment on their videos</label>
+        </div>
+        <button class="btn btn-primary" onclick="engageWithSubscribers()"><i class="fas fa-hand-holding-heart"></i> Engage with Subscribers</button>
+        <div id="sub-eng-result" style="display:none;margin-top:12px"></div>
+      </div>
+    <!-- IG Targeting Page -->
+    <div id="ig-targeting" class="page">
+
+      <div style="background:linear-gradient(135deg,#e1306c,#833ab4);border-radius:16px;padding:28px;margin-bottom:24px;color:white">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:6px"><i class="fab fa-instagram"></i> Instagram Targeted Followers</h2>
+        <p style="opacity:.85;font-size:14px">Grow followers by Gender · City · State · Business niche — real accounts, real engagement.</p>
+        <span id="ig-tgt-mode-badge" style="display:inline-block;margin-top:10px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,.25)">SIM</span>
+      </div>
+
+      <!-- Targeting tabs -->
+      <div class="engagement-tabs tab-group" style="margin-bottom:0">
+        <button class="tab-btn active" data-tab="ig-tgt-combined">🎯 Combined</button>
+        <button class="tab-btn" data-tab="ig-tgt-gender">👤 Gender</button>
+        <button class="tab-btn" data-tab="ig-tgt-city">🏙️ City</button>
+        <button class="tab-btn" data-tab="ig-tgt-state">🗺️ State</button>
+        <button class="tab-btn" data-tab="ig-tgt-business">💼 Business</button>
+      </div>
+
+      <div class="engagement-content">
+
+        <!-- Combined tab -->
+        <div id="ig-tgt-combined" class="tab-content active">
+          <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Mix any criteria — the bot builds the optimal hashtag pool automatically.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+            <div class="form-group" style="margin:0">
+              <label>Gender <small>(optional)</small></label>
+              <select id="comb-gender"><option value="">Any</option><option value="male">Male</option><option value="female">Female</option></select>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>City <small>(optional)</small></label>
+              <input id="comb-city" type="text" placeholder="mumbai, delhi, london…">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>State <small>(optional)</small></label>
+              <input id="comb-state" type="text" placeholder="maharashtra, california…">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Business Niche <small>(optional)</small></label>
+              <select id="comb-biz">
+                <option value="">Any</option>
+                <option value="restaurant">Restaurant / Food</option>
+                <option value="fashion">Fashion</option>
+                <option value="fitness">Fitness</option>
+                <option value="realestate">Real Estate</option>
+                <option value="ecommerce">E-Commerce</option>
+                <option value="tech">Tech / Startup</option>
+                <option value="photography">Photography</option>
+                <option value="coaching">Coaching</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="education">Education</option>
+                <option value="travel">Travel</option>
+                <option value="beauty">Beauty</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Max Follows</label>
+              <input id="comb-max" type="number" value="20" min="1" max="100">
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px" onclick="igTargetFollow('targeted')">
+            <i class="fas fa-user-plus"></i> Start Targeted Follow
+          </button>
+          <div id="ig-tgt-combined-result" style="margin-top:14px;display:none"></div>
+        </div>
+
+        <!-- Gender tab -->
+        <div id="ig-tgt-gender" class="tab-content">
+          <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Follow users whose posts appear under gender-skewed hashtags (#mensfashion, #girlboss etc.).</p>
+          <div class="form-group">
+            <label>Target Gender</label>
+            <select id="gender-select">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="any">Any / Mixed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Max Follows</label>
+            <input id="gender-max" type="number" value="20" min="1" max="100">
+          </div>
+          <button class="btn btn-primary" onclick="igTargetFollow('gender')">
+            <i class="fas fa-user-plus"></i> Follow by Gender
+          </button>
+          <div id="ig-tgt-gender-result" style="margin-top:14px;display:none"></div>
+        </div>
+
+        <!-- City tab -->
+        <div id="ig-tgt-city" class="tab-content">
+          <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Follow users who post from or about a specific city.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+            <div class="form-group" style="margin:0">
+              <label>City Name</label>
+              <input id="city-name" type="text" placeholder="Mumbai, Delhi, New York, London…">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Gender Filter <small>(optional)</small></label>
+              <select id="city-gender"><option value="">Any</option><option value="male">Male</option><option value="female">Female</option></select>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Max Follows</label>
+              <input id="city-max" type="number" value="20" min="1" max="100">
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px" onclick="igTargetFollow('city')">
+            <i class="fas fa-map-marker-alt"></i> Follow by City
+          </button>
+          <div id="ig-tgt-city-result" style="margin-top:14px;display:none"></div>
+        </div>
+
+        <!-- State tab -->
+        <div id="ig-tgt-state" class="tab-content">
+          <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Target an entire state or region — great for regional businesses.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+            <div class="form-group" style="margin:0">
+              <label>State / Region</label>
+              <input id="state-name" type="text" placeholder="Maharashtra, California, Texas…">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>City Refinement <small>(optional)</small></label>
+              <input id="state-city" type="text" placeholder="Leave blank for whole state">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Gender Filter <small>(optional)</small></label>
+              <select id="state-gender"><option value="">Any</option><option value="male">Male</option><option value="female">Female</option></select>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Max Follows</label>
+              <input id="state-max" type="number" value="20" min="1" max="100">
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px" onclick="igTargetFollow('state')">
+            <i class="fas fa-map"></i> Follow by State
+          </button>
+          <div id="ig-tgt-state-result" style="margin-top:14px;display:none"></div>
+        </div>
+
+        <!-- Business tab -->
+        <div id="ig-tgt-business" class="tab-content">
+          <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Target people in a specific industry — perfect for B2B and niche brand growth.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+            <div class="form-group" style="margin:0">
+              <label>Business Niche</label>
+              <select id="biz-type">
+                <option value="restaurant">Restaurant / Food</option>
+                <option value="fashion">Fashion</option>
+                <option value="fitness">Fitness / Gym</option>
+                <option value="realestate">Real Estate</option>
+                <option value="ecommerce">E-Commerce</option>
+                <option value="tech">Tech / Startup</option>
+                <option value="photography">Photography</option>
+                <option value="coaching">Life / Business Coach</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="education">Education</option>
+                <option value="travel">Travel</option>
+                <option value="beauty">Beauty / Salon</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>City <small>(optional)</small></label>
+              <input id="biz-city" type="text" placeholder="Leave blank for global">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Gender Filter <small>(optional)</small></label>
+              <select id="biz-gender"><option value="">Any</option><option value="male">Male</option><option value="female">Female</option></select>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Max Follows</label>
+              <input id="biz-max" type="number" value="20" min="1" max="100">
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px" onclick="igTargetFollow('business')">
+            <i class="fas fa-briefcase"></i> Follow by Business
+          </button>
+          <div id="ig-tgt-business-result" style="margin-top:14px;display:none"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- YT Monetize Page -->
+    <div id="yt-monetize" class="page">
+
+      <div style="background:linear-gradient(135deg,#ff0000,#cc0000);border-radius:16px;padding:28px;margin-bottom:24px;color:white">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:6px"><i class="fab fa-youtube"></i> YouTube Monetization</h2>
+        <p style="opacity:.85;font-size:14px">4,000 Watch Hours + 1,000 Real Subscribers — YouTube Partner Program eligibility tracker.</p>
+        <span id="yt-mon-mode-badge" style="display:inline-block;margin-top:10px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,.25)">SIM</span>
+      </div>
+
+      <!-- Progress cards -->
+      <div class="stats-grid" style="margin-bottom:24px">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#ff000020;color:#ff0000"><i class="fas fa-clock"></i></div>
+          <div class="stat-content">
+            <span class="stat-label">Watch Hours</span>
+            <span class="stat-value" id="mon-watch-hours">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#ff000020;color:#ff0000"><i class="fas fa-percentage"></i></div>
+          <div class="stat-content">
+            <span class="stat-label">Progress to 4,000h</span>
+            <span class="stat-value" id="mon-progress">0%</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#ff000020;color:#ff0000"><i class="fas fa-hourglass-half"></i></div>
+          <div class="stat-content">
+            <span class="stat-label">Hours Remaining</span>
+            <span class="stat-value" id="mon-remaining">4,000</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#ff000020;color:#ff0000"><i class="fas fa-users"></i></div>
+          <div class="stat-content">
+            <span class="stat-label">Real Subs Today</span>
+            <span class="stat-value" id="mon-subs-today">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress bars -->
+      <div style="background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:16px">YPP Eligibility Progress</h3>
+        <div style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+            <span>⏱️ Watch Hours</span>
+            <span id="mon-wh-label">0 / 4,000 hrs</span>
+          </div>
+          <div style="background:#f1f5f9;border-radius:99px;height:12px">
+            <div id="mon-wh-bar" style="background:#ff0000;height:12px;border-radius:99px;width:0%;transition:width .5s"></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+            <span>👥 Subscribers</span>
+            <span id="mon-sub-label">0 / 1,000</span>
+          </div>
+          <div style="background:#f1f5f9;border-radius:99px;height:12px">
+            <div id="mon-sub-bar" style="background:#6366f1;height:12px;border-radius:99px;width:0%;transition:width .5s"></div>
+          </div>
+        </div>
+        <p id="mon-recommendation" style="margin-top:16px;font-size:13px;color:var(--gray);font-style:italic"></p>
+      </div>
+
+      <!-- Action tabs -->
+      <div class="engagement-tabs tab-group" style="margin-bottom:0">
+        <button class="tab-btn active" data-tab="yt-mon-watchtime">⏱️ Watch Time</button>
+        <button class="tab-btn" data-tab="yt-mon-realsubs">👥 Real Subscribers</button>
+      </div>
+
+      <div class="engagement-content">
+
+        <!-- Watch time tab -->
+        <div id="yt-mon-watchtime" class="tab-content active">
+          <p style="color:var(--gray);font-size:14px;margin-bottom:16px">
+            Each session simulates a real viewer watching 60–85% of one of your videos.
+            Only verified, non-bot accounts count toward the YPP threshold.
+          </p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+            <div class="form-group" style="margin:0">
+              <label>Your Channel ID or Video ID</label>
+              <input id="wt-channel-id" type="text" placeholder="UCxxxx or video ID">
+              <small>Find Channel ID in YouTube Studio → Settings → Channel → Advanced</small>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Watch Sessions</label>
+              <input id="wt-sessions" type="number" value="50" min="1" max="500">
+              <small>50 sessions × avg 8 min = ~6.7 hours of watch time</small>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px" onclick="runWatchTime()">
+            <i class="fas fa-play-circle"></i> Accumulate Watch Time
+          </button>
+          <div id="wt-result" style="margin-top:14px;display:none"></div>
+        </div>
+
+        <!-- Real subscribers tab -->
+        <div id="yt-mon-realsubs" class="tab-content">
+          <p style="color:var(--gray);font-size:14px;margin-bottom:16px">
+            Finds real channels in your niche via keyword search, filters out bots,
+            then subscribes — triggering reciprocal subscriptions from genuine viewers.
+          </p>
+          <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#92400e">
+            <strong>Real-account filter applied:</strong> channels must have ≥ 1 video, non-bot title,
+            and must not contain obvious fake-account signals.
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+            <div class="form-group" style="margin:0">
+              <label>Niche Keyword</label>
+              <input id="rsub-query" type="text" placeholder="fitness motivation, travel vlog…">
+              <small>Use your content niche for most relevant subscribers</small>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Max Subscriptions</label>
+              <input id="rsub-max" type="number" value="20" min="1" max="100">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Min Channel Subscribers</label>
+              <input id="rsub-min-subs" type="number" value="10" min="0">
+              <small>Filter out brand-new / bot channels</small>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Min Channel Videos</label>
+              <input id="rsub-min-videos" type="number" value="1" min="0">
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px" onclick="growRealSubscribers()">
+            <i class="fas fa-user-check"></i> Grow Real Subscribers
+          </button>
+          <div id="rsub-result" style="margin-top:14px;display:none"></div>
+        </div>
+
+      </div>
+
+      <!-- Optional: Engage with subscribers' content -->
+      <div style="margin-top:20px;background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:4px"><i class="fas fa-hand-holding-heart" style="color:#ff0000"></i> Engage with Subscribers' Content <span style="font-size:11px;background:#fff1f2;color:#ef4444;padding:2px 8px;border-radius:10px;margin-left:6px">Optional</span></h3>
+        <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Like or comment on videos from channels in your niche. Real engagement triggers reciprocal watch time and subscription growth.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:14px">
+          <div class="form-group" style="margin:0"><label>Comment text</label><input id="sub-eng-comment" type="text" value="Great content! Keep it up 🔥" maxlength="500"></div>
+          <div class="form-group" style="margin:0"><label>Max channels to engage</label><input id="sub-eng-max" type="number" value="10" min="1" max="50"></div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="sub-eng-like" checked> Like their videos</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="sub-eng-comment-cb"> Comment on their videos</label>
+        </div>
+        <button class="btn btn-primary" onclick="engageWithSubscribers()"><i class="fas fa-hand-holding-heart"></i> Engage with Subscribers</button>
+        <div id="sub-eng-result" style="display:none;margin-top:12px"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── Modals ──────────────────────────────────────────────────────────── -->
+
+<!-- YouTube Upload -->
+<div id="uploadModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fab fa-youtube" style="color:#ff0000"></i> Upload to YouTube</h3>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Video File</label>
+        <div class="file-upload">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <span>Drag &amp; drop video file</span>
+          <input type="file" accept="video/*" style="display:none">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Title</label>
+        <input id="video-title" type="text" placeholder="Enter video title">
+      </div>
+      <div class="form-group">
+        <label>Video Type</label>
+        <select id="video-type">
+          <option value="video">Long-form Video</option>
+          <option value="short">YouTube Short (vertical)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="uploadVideo()">
+        <i class="fas fa-upload"></i> Upload
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Instagram Post -->
+<div id="instagramModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fab fa-instagram" style="color:#e1306c"></i> Post to Instagram</h3>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Content File</label>
+        <div class="file-upload">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <span>Image or video file</span>
+          <input type="file" accept="image/*,video/*" style="display:none">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Caption <small>(max 2,200 chars)</small></label>
+        <textarea id="ig-caption" rows="3" maxlength="2200" placeholder="Write a caption…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Post Type</label>
+        <select id="ig-type">
+          <option value="image">Image</option>
+          <option value="reel">Reel</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="postInstagram()">
+        <i class="fas fa-paper-plane"></i> Post
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Rumble Views -->
+<div id="rumbleModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fas fa-video" style="color:#ff6600"></i> Generate Rumble Views</h3>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Rumble Video URL</label>
+        <input id="rumble-url" type="url" placeholder="https://rumble.com/v…">
+      </div>
+      <div class="form-group">
+        <label>Number of Views</label>
+        <input id="rumble-views" type="number" value="100" min="1" max="500">
+        <small>Safety limit: 50 views/hour</small>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="generateRumbleViews()">
+        <i class="fas fa-play"></i> Start
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+
+
+      <!-- Optional: Engage with subscribers content -->
+      <div style="margin-top:20px;background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:4px">
+          <i class="fas fa-hand-holding-heart" style="color:#ff0000"></i>
+          Engage with Subscribers' Content
+          <span style="font-size:11px;background:#fff1f2;color:#ef4444;padding:2px 8px;border-radius:10px;margin-left:6px">Optional</span>
+        </h3>
+        <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Like or comment on niche channel videos. Real engagement triggers reciprocal watch time and subscriptions.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:14px">
+          <div class="form-group" style="margin:0"><label>Comment text</label><input id="sub-eng-comment" type="text" value="Great content! Keep it up 🔥" maxlength="500"></div>
+          <div class="form-group" style="margin:0"><label>Max channels to engage</label><input id="sub-eng-max" type="number" value="10" min="1" max="50"></div>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="sub-eng-like" checked> Like their videos</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="sub-eng-comment-cb"> Comment on their videos</label>
+        </div>
+        <button class="btn btn-primary" onclick="engageWithSubscribers()"><i class="fas fa-hand-holding-heart"></i> Engage with Subscribers</button>
+        <div id="sub-eng-result" style="display:none;margin-top:12px"></div>
+      </div>
+    <!-- IG Targeting Page -->
+    <div id="ig-targeting" class="page">
+      <div style="background:linear-gradient(135deg,#e1306c,#833ab4);border-radius:16px;padding:28px;margin-bottom:24px;color:white">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:6px"><i class="fab fa-instagram"></i> Instagram Targeted Followers</h2>
+        <p style="opacity:.85;font-size:14px">Grow followers by Gender, City, State, Business niche — real accounts, real engagement.</p>
+        <span id="ig-tgt-mode-badge" style="display:inline-block;margin-top:10px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,.25)">SIM</span>
+      </div>
+      <div class="engagement-tabs tab-group" style="margin-bottom:0">
+        <button class="tab-btn active" data-tab="ig-tgt-combined">Combined</button>
+        <button class="tab-btn" data-tab="ig-tgt-gender">Gender</button>
+        <button class="tab-btn" data-tab="ig-tgt-city">City</button>
+        <button class="tab-btn" data-tab="ig-tgt-state">State</button>
+        <button class="tab-btn" data-tab="ig-tgt-business">Business</button>
+      </div>
+      <div class="engagement-content">
+        <div id="ig-tgt-combined" class="tab-content active">
+          <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Mix any criteria — the bot builds the optimal hashtag pool automatically.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+            <div class="form-group" style="margin:0"><label>Gender</label><select id="comb-gender"><option value="">Any</option><option value="male">Male</option><option value="female">Female</option></select></div>
+            <div class="form-group" style="margin:0"><label>City</label><input id="comb-city" type="text" placeholder="mumbai, london…"></div>
+            <div class="form-group" style="margin:0"><label>State</label><input id="comb-state" type="text" placeholder="maharashtra…"></div>
+            <div class="form-group" style="margin:0"><label>Business Niche</label><select id="comb-biz"><option value="">Any</option><option value="restaurant">Restaurant</option><option value="fashion">Fashion</option><option value="fitness">Fitness</option><option value="realestate">Real Estate</option><option value="ecommerce">E-Commerce</option><option value="tech">Tech</option><option value="photography">Photography</option><option value="coaching">Coaching</option><option value="healthcare">Healthcare</option><option value="education">Education</option><option value="travel">Travel</option><option value="beauty">Beauty</option></select></div>
+            <div class="form-group" style="margin:0"><label>Max Follows</label><input id="comb-max" type="number" value="20" min="1" max="100"></div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px" onclick="igTargetFollow('targeted')"><i class="fas fa-user-plus"></i> Start Targeted Follow</button>
+          <div id="ig-tgt-combined-result" class="target-result" style="display:none"></div>
+        </div>
+        <div id="ig-tgt-gender" class="tab-content">
+          <div class="form-group"><label>Target Gender</label><select id="gender-select"><option value="male">Male</option><option value="female">Female</option><option value="any">Any</option></select></div>
+          <div class="form-group"><label>Max Follows</label><input id="gender-max" type="number" value="20" min="1" max="100"></div>
+          <button class="btn btn-primary" onclick="igTargetFollow('gender')"><i class="fas fa-user-plus"></i> Follow by Gender</button>
+          <div id="ig-tgt-gender-result" class="target-result" style="display:none"></div>
+        </div>
+        <div id="ig-tgt-city" class="tab-content">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+            <div class="form-group" style="margin:0"><label>City Name</label><input id="city-name" type="text" placeholder="Mumbai, New York…"></div>
+            <div class="form-group" style="margin:0"><label>Gender Filter</label><select id="city-gender"><option value="">Any</option><option value="male">Male</option><option value="female">Female</option></select></div>
+            <div class="form-group" style="margin:0"><label>Max Follows</label><input id="city-max" type="number" value="20" min="1" max="100"></div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px" onclick="igTargetFollow('city')"><i class="fas fa-map-marker-alt"></i> Follow by City</button>
+          <div id="ig-tgt-city-result" class="target-result" style="display:none"></div>
+        </div>
+        <div id="ig-tgt-state" class="tab-content">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+            <div class="form-group" style="margin:0"><label>State / Region</label><input id="state-name" type="text" placeholder="Maharashtra, California…"></div>
+            <div class="form-group" style="margin:0"><label>City Refinement</label><input id="state-city" type="text" placeholder="optional"></div>
+            <div class="form-group" style="margin:0"><label>Gender Filter</label><select id="state-gender"><option value="">Any</option><option value="male">Male</option><option value="female">Female</option></select></div>
+            <div class="form-group" style="margin:0"><label>Max Follows</label><input id="state-max" type="number" value="20" min="1" max="100"></div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px" onclick="igTargetFollow('state')"><i class="fas fa-map"></i> Follow by State</button>
+          <div id="ig-tgt-state-result" class="target-result" style="display:none"></div>
+        </div>
+        <div id="ig-tgt-business" class="tab-content">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+            <div class="form-group" style="margin:0"><label>Business Niche</label><select id="biz-type"><option value="restaurant">Restaurant</option><option value="fashion">Fashion</option><option value="fitness">Fitness</option><option value="realestate">Real Estate</option><option value="ecommerce">E-Commerce</option><option value="tech">Tech</option><option value="photography">Photography</option><option value="coaching">Coaching</option><option value="healthcare">Healthcare</option><option value="education">Education</option><option value="travel">Travel</option><option value="beauty">Beauty</option></select></div>
+            <div class="form-group" style="margin:0"><label>City</label><input id="biz-city" type="text" placeholder="optional"></div>
+            <div class="form-group" style="margin:0"><label>Gender Filter</label><select id="biz-gender"><option value="">Any</option><option value="male">Male</option><option value="female">Female</option></select></div>
+            <div class="form-group" style="margin:0"><label>Max Follows</label><input id="biz-max" type="number" value="20" min="1" max="100"></div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px" onclick="igTargetFollow('business')"><i class="fas fa-briefcase"></i> Follow by Business</button>
+          <div id="ig-tgt-business-result" class="target-result" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- YT Monetize Page -->
+    <div id="yt-monetize" class="page">
+      <div style="background:linear-gradient(135deg,#ff0000,#cc0000);border-radius:16px;padding:28px;margin-bottom:24px;color:white">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:6px"><i class="fab fa-youtube"></i> YouTube Monetization</h2>
+        <p style="opacity:.85;font-size:14px">4,000 Watch Hours + 1,000 Real Subscribers — YouTube Partner Program eligibility tracker.</p>
+        <span id="yt-mon-mode-badge" style="display:inline-block;margin-top:10px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,.25)">SIM</span>
+      </div>
+      <div class="stats-grid" style="margin-bottom:24px">
+        <div class="stat-card"><div class="stat-icon" style="background:#ff000020;color:#ff0000"><i class="fas fa-clock"></i></div><div class="stat-content"><span class="stat-label">Watch Hours</span><span class="stat-value" id="mon-watch-hours">0</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#ff000020;color:#ff0000"><i class="fas fa-percentage"></i></div><div class="stat-content"><span class="stat-label">Progress to 4,000h</span><span class="stat-value" id="mon-progress">0%</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#ff000020;color:#ff0000"><i class="fas fa-hourglass-half"></i></div><div class="stat-content"><span class="stat-label">Hours Remaining</span><span class="stat-value" id="mon-remaining">4,000</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#ff000020;color:#ff0000"><i class="fas fa-users"></i></div><div class="stat-content"><span class="stat-label">Real Subs Today</span><span class="stat-value" id="mon-subs-today">0</span></div></div>
+      </div>
+      <div style="background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:16px">YPP Eligibility Progress</h3>
+        <div style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>Watch Hours</span><span id="mon-wh-label">0 / 4,000 hrs</span></div>
+          <div style="background:#f1f5f9;border-radius:99px;height:12px"><div id="mon-wh-bar" style="background:#ff0000;height:12px;border-radius:99px;width:0%;transition:width .5s"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>Subscribers</span><span id="mon-sub-label">0 / 1,000</span></div>
+          <div style="background:#f1f5f9;border-radius:99px;height:12px"><div id="mon-sub-bar" style="background:#6366f1;height:12px;border-radius:99px;width:0%;transition:width .5s"></div></div>
+        </div>
+        <p id="mon-recommendation" style="margin-top:16px;font-size:13px;color:var(--gray);font-style:italic"></p>
+      </div>
+      <div class="engagement-tabs tab-group" style="margin-bottom:0">
+        <button class="tab-btn active" data-tab="yt-mon-watchtime">Watch Time</button>
+        <button class="tab-btn" data-tab="yt-mon-realsubs">Real Subscribers</button>
+      </div>
+      <div class="engagement-content">
+        <div id="yt-mon-watchtime" class="tab-content active">
+          <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Each session simulates a real viewer watching 60-85% of a video. Only non-bot accounts count toward YPP.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+            <div class="form-group" style="margin:0"><label>Your Channel ID or Video ID</label><input id="wt-channel-id" type="text" placeholder="UCxxxx…"><small>YouTube Studio > Settings > Channel > Advanced</small></div>
+            <div class="form-group" style="margin:0"><label>Watch Sessions</label><input id="wt-sessions" type="number" value="50" min="1" max="500"><small>50 sessions x avg 8 min = ~6.7 hrs</small></div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px" onclick="runWatchTime()"><i class="fas fa-play-circle"></i> Accumulate Watch Time</button>
+          <div id="wt-result" class="target-result" style="display:none"></div>
+        </div>
+        <div id="yt-mon-realsubs" class="tab-content">
+          <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:#92400e"><strong>Real-account filter:</strong> channels must have at least 1 video, no bot-like title signals.</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+            <div class="form-group" style="margin:0"><label>Niche Keyword</label><input id="rsub-query" type="text" placeholder="fitness, travel, tech…"></div>
+            <div class="form-group" style="margin:0"><label>Max Subscriptions</label><input id="rsub-max" type="number" value="20" min="1" max="100"></div>
+            <div class="form-group" style="margin:0"><label>Min Channel Subscribers</label><input id="rsub-min-subs" type="number" value="10" min="0"></div>
+            <div class="form-group" style="margin:0"><label>Min Channel Videos</label><input id="rsub-min-videos" type="number" value="1" min="0"></div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px" onclick="growRealSubscribers()"><i class="fas fa-user-check"></i> Grow Real Subscribers</button>
+          <div id="rsub-result" class="target-result" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

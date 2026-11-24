@@ -1,0 +1,17 @@
+.env
+*.db
+*.db-shm
+*.db-wal
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+logs/
+*.log
+-p/
+.kiro/
+bot_smoke.db
+bot_test.db
+output.txt
+run_out.txt
+run_err.txt
